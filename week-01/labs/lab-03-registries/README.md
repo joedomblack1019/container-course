@@ -293,9 +293,8 @@ git push origin add-YOUR_GITHUB_USERNAME-week01
 
 Once your PR is merged, your container will be automatically deployed! You can check:
 
-1. **Deployment Status**: `https://container-course-cluster.example.com/status`
-2. **Your App**: `https://container-course-cluster.example.com/students/YOUR_GITHUB_USERNAME`
-3. **Class Gallery**: `https://container-course-cluster.example.com/gallery`
+1. **Your App**: `https://container-course.lab.shart.cloud/students/YOUR_GITHUB_USERNAME`
+2. **Class Gallery**: `https://container-course.lab.shart.cloud/gallery`
 
 The cluster will:
 - Pull your container from GHCR
