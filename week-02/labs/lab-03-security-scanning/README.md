@@ -403,6 +403,12 @@ rm scan-results.txt
 
 ---
 
+## Demo
+
+![Trivy Security Scan Demo](../../../assets/week-02-lab-03-trivy-scan.gif)
+
+---
+
 ## Key Takeaway
 
 > **Scan early, scan often. Fix CRITICAL and HIGH before production.**

@@ -447,6 +447,12 @@ Keep your images—we'll push them to a registry in Lab 3!
 
 ---
 
+## Demo
+
+![Docker Build Demo](../../../assets/week-01-lab-02-docker-build.gif)
+
+---
+
 ## Next Lab
 
 Continue to [Lab 3: Push to Registries](../lab-03-registries/)

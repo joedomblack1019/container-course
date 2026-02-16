@@ -283,6 +283,12 @@ Before moving on, verify you can:
 
 ---
 
+## Demo
+
+![First Container Demo](../../../assets/week-01-lab-01-first-container.gif)
+
+---
+
 ## Next Lab
 
 Continue to [Lab 2: Build Your Python App](../lab-02-python-app/)

@@ -232,6 +232,12 @@ docker rmi data-processor:slow data-processor:fast
 
 ---
 
+## Demo
+
+![Layer Optimization Demo](../../../assets/week-02-lab-01-layer-cache.gif)
+
+---
+
 ## Key Takeaway
 
 > **Put frequently-changing files at the END of your Dockerfile.**

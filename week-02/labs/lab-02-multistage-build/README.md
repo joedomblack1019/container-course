@@ -360,6 +360,12 @@ docker rmi go-api:fat go-api:lean go-api:scratch
 
 ---
 
+## Demo
+
+![Multi-Stage Build Demo](../../../assets/week-02-lab-02-multistage.gif)
+
+---
+
 ## Key Takeaway
 
 > **Multi-stage builds separate build-time dependencies from runtime dependencies.**

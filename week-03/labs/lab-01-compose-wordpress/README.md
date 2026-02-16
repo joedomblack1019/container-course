@@ -302,6 +302,12 @@ docker compose down -v
 
 ---
 
+## Demo
+
+![Docker Compose Demo](../../../assets/week-03-lab-01-compose-up.gif)
+
+---
+
 ## Next Lab
 
 Continue to [Lab 2: Network Debugging](../lab-02-network-debugging/)
