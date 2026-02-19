@@ -95,9 +95,11 @@ kubectl -n kube-system exec "$ETCD_POD" -- etcdctl \
 Validate snapshot metadata:
 
 ```bash
-kubectl -n kube-system exec "$ETCD_POD" -- etcdctl \
+kubectl -n kube-system exec "$ETCD_POD" -- etcdutl \
   snapshot status /var/lib/etcd/snapshot.db -w table
 ```
+
+> `etcdutl` is the offline utility for snapshot operations in etcd 3.6+. It reads the file directly — no TLS flags or `--endpoints` needed.
 
 Copy snapshot locally as evidence:
 
@@ -124,10 +126,10 @@ Expected now: `after-snapshot`.
 
 ## Part 4: Rehearse Restore (Non-Destructive)
 
-Restore into an alternate data directory inside the etcd pod. `etcdctl snapshot restore` creates the `--data-dir` automatically — no shell or mkdir needed:
+Restore into an alternate data directory inside the etcd pod. `etcdutl snapshot restore` creates the `--data-dir` automatically — no shell or mkdir needed:
 
 ```bash
-kubectl -n kube-system exec "$ETCD_POD" -- etcdctl \
+kubectl -n kube-system exec "$ETCD_POD" -- etcdutl \
   snapshot restore /var/lib/etcd/snapshot.db \
   --data-dir=/var/lib/etcd-restore-check
 ```
@@ -135,7 +137,7 @@ kubectl -n kube-system exec "$ETCD_POD" -- etcdctl \
 Confirm restore output directory exists:
 
 ```bash
-kubectl -n kube-system exec "$ETCD_POD" -- etcdctl \
+kubectl -n kube-system exec "$ETCD_POD" -- etcdutl \
   snapshot status /var/lib/etcd-restore-check/member/snap/db -w table
 ```
 
@@ -145,13 +147,15 @@ This proves your snapshot can be restored and is not corrupt.
 
 ## Part 5: Failure Checkpoint (Intentional Cert Errors)
 
-Run a known-bad command to understand failure signatures:
+`etcdutl` is offline and needs no certs. To learn cert failure signatures, use an **online** command like `member list` instead.
+
+Run with a missing CA cert:
 
 ```bash
 kubectl -n kube-system exec "$ETCD_POD" -- etcdctl \
   --endpoints=https://127.0.0.1:2379 \
   --cacert=/tmp/does-not-exist.crt \
-  snapshot status /var/lib/etcd/snapshot.db
+  member list
 ```
 
 Now run with the wrong cert/key pair (peer cert instead of server cert):
@@ -162,7 +166,7 @@ kubectl -n kube-system exec "$ETCD_POD" -- etcdctl \
   --cacert=/etc/kubernetes/pki/etcd/ca.crt \
   --cert=/etc/kubernetes/pki/etcd/peer.crt \
   --key=/etc/kubernetes/pki/etcd/peer.key \
-  snapshot status /var/lib/etcd/snapshot.db || true
+  member list || true
 ```
 
 Capture both error messages and write down:
