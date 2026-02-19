@@ -1,0 +1,68 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.box_version = "~> 20240301.0.0"
+
+  # Common configuration for all VMs
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = 2048
+    vb.cpus = 2
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+    vb.customize ["modifyvm", :id, "--paravirtprovider", "kvm"]
+  end
+
+  # Control plane node
+  config.vm.define "control-plane" do |cp|
+    cp.vm.hostname = "control-plane"
+    cp.vm.network "private_network", ip: "192.168.56.10", virtualbox__intnet: true
+
+    cp.vm.provider "virtualbox" do |vb|
+      vb.name = "k8s-control-plane"
+      vb.memory = 3072  # Control plane needs more memory
+      vb.gui = false
+    end
+  end
+
+  # Worker node 1
+  config.vm.define "worker-1" do |w1|
+    w1.vm.hostname = "worker-1"
+    w1.vm.network "private_network", ip: "192.168.56.11", virtualbox__intnet: true
+
+    w1.vm.provider "virtualbox" do |vb|
+      vb.name = "k8s-worker-1"
+      vb.gui = false
+    end
+  end
+
+  # Worker node 2
+  config.vm.define "worker-2" do |w2|
+    w2.vm.hostname = "worker-2"
+    w2.vm.network "private_network", ip: "192.168.56.12", virtualbox__intnet: true
+
+    w2.vm.provider "virtualbox" do |vb|
+      vb.name = "k8s-worker-2"
+      vb.gui = false
+    end
+  end
+
+  # Common provisioning for all nodes
+  config.vm.provision "shell", inline: <<-SHELL
+    # Update package lists
+    apt-get update
+
+    # Set up /etc/hosts for node communication
+    cat >> /etc/hosts <<EOF
+192.168.56.10 control-plane
+192.168.56.11 worker-1
+192.168.56.12 worker-2
+EOF
+
+    # Install basic tools
+    apt-get install -y curl wget apt-transport-https ca-certificates gnupg lsb-release
+
+    echo "Node provisioning complete. Run the setup scripts manually."
+  SHELL
+end

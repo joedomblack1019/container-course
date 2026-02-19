@@ -15,11 +15,13 @@ The answer is Kubernetes. And here's the thing—your Week 1 apps? They've been 
 
 By the end of this class, you will be able to:
 
-1. Diagram the Kubernetes control plane and explain the role of each component (API server, etcd, scheduler, controller manager, kubelet)
-2. Explain the desired state → actual state reconciliation loop that makes Kubernetes self-healing
-3. Create and manage Pods, Deployments, and Services using `kubectl`
-4. Perform rolling updates and explain how Kubernetes rolls out changes without downtime
-5. Debug failing pods using `kubectl logs`, `kubectl describe`, `kubectl exec`, and cluster events
+1. Diagram the Kubernetes control plane and explain the role of each component (API server, etcd, scheduler, controller manager, kubelet) `CKA: Cluster Architecture, Installation and Configuration`
+2. Explain the desired state -> actual state reconciliation loop that makes Kubernetes self-healing `CKA: Workloads and Scheduling`
+3. Create and manage Pods, Deployments, and Services using `kubectl` `CKA: Workloads and Scheduling + Services and Networking`
+4. Perform rolling updates and explain how Kubernetes rolls out changes without downtime `CKA: Workloads and Scheduling`
+5. Debug failing pods using `kubectl logs`, `kubectl describe`, `kubectl exec`, and cluster events `CKA: Troubleshooting`
+6. Bootstrap a disposable control plane with `kubeadm` and identify key admin artifacts (`/etc/kubernetes/manifests`, kubeconfigs, certs) `CKA: Cluster Architecture, Installation and Configuration`
+7. Author and test least-privilege RBAC with Roles, ClusterRoles, and bindings using `kubectl auth can-i` `CKA: Cluster Architecture, Installation and Configuration`
 
 ---
 
@@ -267,6 +269,36 @@ You'll:
 - Watch ArgoCD deploy your app to the shared cluster
 - Verify your dev environment is live
 
+### Lab 4 (CKA Extension): kubeadm Bootstrap Foundations
+
+📁 See [labs/lab-04-kubeadm-bootstrap/](./labs/lab-04-kubeadm-bootstrap/)
+
+You'll:
+- Run kubeadm preflight checks in a disposable admin VM
+- Initialize a single control-plane cluster and configure kubectl access
+- Inspect static pod manifests, kubeconfig files, and cert locations
+- Practice safe reset and re-bootstrap workflow
+
+### Lab 5 (CKA Extension): RBAC Authorization Deep Dive
+
+📁 See [labs/lab-05-rbac-authz/](./labs/lab-05-rbac-authz/)
+
+You'll:
+- Create namespace-scoped and cluster-scoped permissions
+- Bind identities with RoleBindings and ClusterRoleBindings
+- Diagnose authorization errors with impersonation and `kubectl auth can-i`
+- Verify least-privilege guardrails
+
+---
+
+## Generated Visualizations
+
+### Lab 2: Deploy, Scale, Update, Debug Timeline
+
+![Deployment Rollout Timeline](../assets/generated/week-04-deploy-rollout/deployment_rollout_timeline.png)
+
+![Deployment Pod Phase Timeline](../assets/generated/week-04-deploy-rollout/deployment_pod_phase_timeline.png)
+
 ---
 
 ## Discovery Questions
@@ -297,10 +329,10 @@ Plus these exercises in the container-gym:
 
 | Exercise | Time | Focus |
 |----------|------|-------|
-| `jerry-forgot-resources` | 20 min | Pod scheduling failures — Jerry deployed without resource requests |
-| `crashloopbackoff-detective` | 20 min | Debug a pod stuck in CrashLoopBackOff |
-| `selector-mismatch` | 15 min | Service selector doesn't match pod labels — no traffic flowing |
-| `rollout-rollback` | 15 min | Practice rolling updates and rollbacks |
+| `jerry-forgot-resources` | 20 min | Pod scheduling failures from missing requests/limits |
+| `jerry-broken-service` | 20 min | Service-to-pod routing and selector debugging |
+| `jerry-probe-failures` | 20 min | Startup/readiness probe troubleshooting |
+| `jerry-rbac-denied` | 20 min | RBAC deny triage with `kubectl auth can-i` |
 
 ---
 

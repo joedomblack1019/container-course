@@ -39,6 +39,70 @@ kind load docker-image course-app:v5 --name lab
 
 ---
 
+## Part 1.5: Verify Redis Prerequisite
+
+Lab 2 assumes Redis from Lab 1 already exists in the same namespace and cluster context.
+
+```bash
+# Confirm you are on the cluster you intend to use for this lab
+kubectl config current-context
+
+# Redis should exist from Lab 1
+kubectl get svc redis
+kubectl get pod redis-0
+```
+
+If either command says `NotFound`, create Redis now (from Lab 1 solution manifests):
+
+```bash
+kubectl apply -f ../lab-01-helm-redis-and-vault/solution/redis-configmap.yaml
+kubectl apply -f ../lab-01-helm-redis-and-vault/solution/redis-secret.yaml
+kubectl apply -f ../lab-01-helm-redis-and-vault/solution/redis-service.yaml
+kubectl apply -f ../lab-01-helm-redis-and-vault/solution/redis-statefulset.yaml
+kubectl get pods -l app=redis -w
+```
+
+Wait for `redis-0` to be `1/1 Running` before continuing.
+
+---
+
+## Optional Preflight: Inspect the API + Scaffold YAML
+
+If you want to inspect resource fields before writing YAML from scratch:
+
+```bash
+# Top-level objects
+kubectl explain configmap
+kubectl explain secret
+kubectl explain deployment
+
+# Fields used in this lab
+kubectl explain configmap.data
+kubectl explain secret.stringData
+kubectl explain deployment.spec.template.spec.containers.envFrom
+kubectl explain deployment.spec.template.spec.containers.env.valueFrom.secretKeyRef
+kubectl explain deployment.spec.template.spec.containers.env.valueFrom.fieldRef
+```
+
+You can also scaffold manifests locally without creating anything:
+
+```bash
+kubectl create configmap app-config \
+  --from-literal=REDIS_HOST=redis \
+  --from-literal=REDIS_PORT=6379 \
+  --from-literal=ENVIRONMENT=development \
+  --from-literal=GREETING=Hello \
+  --dry-run=client -o yaml > configmap.generated.yaml
+
+kubectl create secret generic redis-credentials \
+  --from-literal=REDIS_PASSWORD=redis-lab-password \
+  --dry-run=client -o yaml > secret.generated.yaml
+```
+
+Review and adapt those files, or continue with the handwritten YAML below.
+
+---
+
 ## Part 2: Create a ConfigMap
 
 A ConfigMap holds non-sensitive configuration. Redis connection details aren't secret — they're just plumbing.
@@ -182,6 +246,7 @@ Notice the two ways to inject environment variables:
 - **`env[].valueFrom`** — Loads a single key. More explicit, required when you need to pick specific keys or rename them.
 
 ```bash
+kubectl apply --dry-run=client -f deployment.yaml -o yaml
 kubectl apply -f deployment.yaml
 kubectl get pods -w
 ```

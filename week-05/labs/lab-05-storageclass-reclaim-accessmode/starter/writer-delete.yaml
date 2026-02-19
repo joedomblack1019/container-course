@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writer-delete
+spec:
+  containers:
+  - name: writer
+    image: busybox:1.36
+    command: ["sh", "-c", "echo delete-policy > /data/policy.txt && sleep 3600"]
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: pvc-delete

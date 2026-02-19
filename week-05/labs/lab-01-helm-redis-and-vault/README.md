@@ -707,9 +707,9 @@ This is the main resource. Create `redis-statefulset.yaml`:
 
 > **Try scaffolding first.** Before looking at the manifest below, try generating a starting point:
 > ```bash
-> kubectl create statefulset redis --image=redis:7-alpine --dry-run=client -o yaml
+> kubectl create deployment redis --image=redis:7-alpine --dry-run=client -o yaml > redis-skeleton.yaml
 > ```
-> The output won't have everything you need (no volume mounts, no config), but it gives you the skeleton. Compare it to what's below to see what you need to add.
+> In newer kubectl versions (for example v1.34), `kubectl create statefulset` is no longer available. Use this Deployment scaffold as a starting point, then convert it to a StatefulSet (`kind`, `spec.serviceName`, `volumeClaimTemplates`, probes, and mounts). Compare it to what's below to see what you need to add.
 
 ```yaml
 apiVersion: apps/v1

@@ -1,0 +1,24 @@
+# Values for uptime-kuma/uptime-kuma (dirsigler chart).
+# Keep this minimal for the lab: ClusterIP service + small PVC + resource caps.
+
+ingress:
+  enabled: false
+
+service:
+  type: ClusterIP
+  port: 3001
+
+volume:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 256Mi
+  existingClaim: ""
+
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "50m"
+  limits:
+    memory: "256Mi"
+    cpu: "200m"
+

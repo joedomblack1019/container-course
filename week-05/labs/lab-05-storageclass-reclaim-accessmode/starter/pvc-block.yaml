@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-block-mode
+  namespace: storage-lab
+spec:
+  accessModes: ["ReadWriteOnce"]
+  volumeMode: Block
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: local-delete
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: block-mode-pod
+  namespace: storage-lab
+spec:
+  containers:
+  - name: block-user
+    image: busybox:1.36
+    command: ["sh", "-c", "echo 'Block device access' && ls -la /dev/block-device && sleep 3600"]
+    volumeDevices:
+    - name: block-storage
+      devicePath: /dev/block-device
+  volumes:
+  - name: block-storage
+    persistentVolumeClaim:
+      claimName: pvc-block-mode

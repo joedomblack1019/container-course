@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secure-app
+  namespace: psa-restricted
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: secure-app
+  template:
+    metadata:
+      labels:
+        app: secure-app
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: nginx
+        image: nginx:1.20
+        ports:
+        - containerPort: 8080
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: var-run-volume
+          mountPath: /var/run
+        - name: var-cache-volume
+          mountPath: /var/cache/nginx
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: var-run-volume
+        emptyDir: {}
+      - name: var-cache-volume
+        emptyDir: {}

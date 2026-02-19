@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: svc-types-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: svc-types-demo
+  template:
+    metadata:
+      labels:
+        app: svc-types-demo
+    spec:
+      containers:
+      - name: app
+        image: hashicorp/http-echo:1.0.0
+        args:
+          - "-listen=:5678"
+          - "-text=service-types-ok"
+        ports:
+        - containerPort: 5678
