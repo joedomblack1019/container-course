@@ -85,7 +85,7 @@ The key idea: **Pods are not endpoints. Services are.** Pods die, IPs change, re
 | 2:00 - 2:40 | **Lab 2:** Gateway API on the shared cluster (HTTPRoute + Uptime Kuma) | Hands-on |
 | 2:40 - 3:00 | **Lab 3:** NetworkPolicies (break it, fix it, lock it down) | Hands-on |
 
-> **CKA Extension Track:** Two additional self-paced labs are included below (Lab 4 and Lab 5) for Service-type troubleshooting and CoreDNS incident response.
+> **CKA Extension Track:** Two additional self-paced labs are included below (Lab 4 and Lab 5) for Service-type troubleshooting and CoreDNS incident response. Lab 6 (CNI) is a first-class 2025 CKA competency and should be completed before the exam, even if it is self-paced.
 
 ---
 
@@ -215,6 +215,90 @@ The practical workflow is:
 2. Add one allow rule at a time (DNS, ingress from gateway, app-to-redis, etc.)
 3. Verify after each change
 
+> **CNI enforcement is a prerequisite.** A NetworkPolicy is just an API object stored in etcd. The CNI plugin running on each node is what programs actual kernel rules to enforce it. CNIs like **kindnet** and basic **Flannel** do not implement NetworkPolicy enforcement — if you apply a deny policy on those clusters, traffic continues to flow unchanged with no error or warning. The shared cluster uses **Cilium**, which fully enforces policies. See [Lab 6](./labs/lab-06-cni-comparison/) for the direct kindnet-vs-Calico comparison. **Reference:** [Network Plugins](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/) | [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/)
+
+### NetworkPolicy Exam Patterns
+
+The CKA exam requires writing NetworkPolicy YAML from scratch. These three patterns cover the most common task types:
+
+**Pattern 1 — Allow egress to a specific CIDR (e.g. an external API)**
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-external
+  namespace: my-namespace
+spec:
+  podSelector:
+    matchLabels:
+      app: my-app
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 203.0.113.0/24   # specific external CIDR
+            except:
+              - 203.0.113.5/32     # carve out one address if needed
+      ports:
+        - protocol: TCP
+          port: 443
+```
+
+**Pattern 2 — Allow ingress from a specific namespace (namespaceSelector)**
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-monitoring
+  namespace: my-namespace
+spec:
+  podSelector:
+    matchLabels:
+      app: my-app
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring   # match namespace by label
+      ports:
+        - protocol: TCP
+          port: 8080
+```
+
+**Pattern 3 — Allow from specific pods in a specific namespace (AND logic)**
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-gateway-pods
+  namespace: my-namespace
+spec:
+  podSelector:
+    matchLabels:
+      app: my-app
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:       # both selectors in the SAME list item = AND
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app: gateway
+      ports:
+        - protocol: TCP
+          port: 5000
+```
+
+> **AND vs OR:** When `namespaceSelector` and `podSelector` are in the **same** `from` list item (as above), both must match — it's an AND. When they are **separate** list items (`- namespaceSelector: ...` and `- podSelector: ...`), either can match — it's an OR. Getting this wrong produces subtle access bugs that are hard to spot under exam pressure.
+
 ### DNS in Kubernetes
 
 Kubernetes DNS is how "Service names become hostnames."
@@ -225,6 +309,30 @@ Common patterns:
 - Fully qualified: `redis.student-jlgore-dev.svc.cluster.local`
 
 CoreDNS watches Services and Endpoints and answers queries automatically. If DNS breaks, your app may be healthy but unable to reach anything by name.
+
+**First check — can any pod resolve cluster DNS?**
+
+```bash
+# Quickest baseline check: run nslookup from the CoreDNS pod itself
+COREDNS_POD=$(kubectl -n kube-system get pods -l k8s-app=kube-dns -o name | head -1)
+kubectl -n kube-system exec "$COREDNS_POD" -- nslookup kubernetes.default.svc.cluster.local
+
+# Or spin up a one-off probe pod
+kubectl run dns-check --rm -it --image=busybox:1.36 -- nslookup kubernetes.default.svc.cluster.local
+```
+
+**Check the Corefile configuration:**
+
+```bash
+# View the entire CoreDNS config — the forward directive is the most common failure point
+kubectl describe configmap coredns -n kube-system
+
+# Check CoreDNS pod health and recent logs
+kubectl -n kube-system get pods -l k8s-app=kube-dns
+kubectl -n kube-system logs deployment/coredns --tail=40
+```
+
+If cluster names resolve but external names (e.g. `google.com`) fail, look at the `forward` line in the Corefile — it's pointing somewhere unreachable. If all DNS fails including cluster names, CoreDNS pods are down or OOMKilled.
 
 ---
 
@@ -276,7 +384,7 @@ You will:
 - Restore CoreDNS config and verify service discovery recovery
 - Map this workflow to `jerry-coredns-loop`
 
-### Lab 6 (CKA Extension): CNI Plugin Comparison
+### Lab 6: CNI Plugin Comparison
 
 See [labs/lab-06-cni-comparison/](./labs/lab-06-cni-comparison/)
 
@@ -331,6 +439,7 @@ Complete these exercises in the container-gym before next class:
 - Gateway API docs: https://gateway-api.sigs.k8s.io/
 - Cilium Gateway API: https://docs.cilium.io/en/stable/network/servicemesh/gateway-api/
 - NetworkPolicy docs: https://kubernetes.io/docs/concepts/services-networking/network-policies/
+- Network Plugins (CNI): https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/
 - Debugging DNS resolution: https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/
 - CoreDNS project docs: https://coredns.io/
 - NetworkPolicy editor: https://editor.networkpolicy.io/

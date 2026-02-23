@@ -32,7 +32,7 @@ An **operator** is the same pattern applied to your own domain-specific problems
 │  The Kubernetes control loop (same pattern, every controller)   │
 │                                                                 │
 │   Observe        Compare       Act                              │
-│  ──────────   ──────────────  ─────────────────────            │
+│  ──────────   ──────────────  ─────────────────────             │
 │  Read actual  Desired state   Create / update / delete          │
 │  state from   from your CRD   resources to reconcile            │
 │  the cluster  spec            the difference                    │
@@ -55,15 +55,7 @@ The pattern has a name: **Operator Pattern**. It was formalized by CoreOS in 201
 
 **CRDs: the vocabulary half of an operator**
 
-CRD stands for **Custom Resource Definition**. To unpack that:
-
-- A **Resource** is anything you interact with through the Kubernetes API — Pod, Deployment, Service, ConfigMap. These are all resources.
-- A **Custom Resource** is a resource that isn't built into Kubernetes. You added it. `K8sGPT` and `Result` are custom resources — Kubernetes didn't ship knowing what those were.
-- The **Definition** is the schema: a CRD is the document that tells the API server "here is a new type called `K8sGPT`, here are the fields it accepts, here is how to validate them." It's the blueprint.
-
-The CRD is the type; the CR is the instance. Same relationship as a class and an object, or a JSON Schema and a JSON document. When you run `kubectl apply -f k8sgpt-cr.yaml` later in this lab, you're creating a **CR** (an instance) that conforms to the **CRD** (the schema) the operator registered.
-
-Once a CRD is installed, its resource type is a first-class citizen — you can `kubectl get`, `kubectl describe`, `kubectl apply`, and `kubectl watch` it, pipe it through RBAC, and use it in GitOps workflows exactly like any built-in resource.
+A CRD registers a new resource type with the Kubernetes API server. Once it's installed, your new type is a first-class citizen — you can `kubectl get`, `kubectl describe`, `kubectl apply`, and `kubectl watch` it, pipe it through RBAC, and use it in GitOps workflows exactly like any built-in resource.
 
 ```bash
 # After installing k8sgpt-operator, these work like any other kubectl command:
@@ -84,7 +76,7 @@ k8sgpt is an AI-powered Kubernetes diagnostic tool that identifies problems and 
 ┌──────────────────────────────────────────────────────────────────┐
 │  k8sgpt-operator (running in k8sgpt-operator-system)             │
 │                                                                  │
-│  Watches cluster → calls AI backend → writes Result CRDs        │
+│  Watches cluster → calls AI backend → writes Result CRDs         │
 │                                                                  │
 │  $ kubectl get results -n k8sgpt-operator-system                 │
 │  NAME                          AGE                               │
@@ -165,8 +157,6 @@ kubectl create secret generic k8sgpt-secret \
 ### Deploy the K8sGPT custom resource
 
 This CR tells the operator which AI backend to use and which resource types to analyze:
-
-> Note: `starter/k8sgpt-cr.yaml` pins a known-good `spec.version` for the `k8sgpt` image so it stays compatible with this operator chart.
 
 ```bash
 kubectl apply -f starter/k8sgpt-cr.yaml

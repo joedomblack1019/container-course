@@ -1,3 +1,8 @@
+![Lab 04 etcd Snapshot and Restore Drill](../../../assets/generated/week-05-lab-04/hero.png)
+![Lab 04 etcd backup and restore workflow](../../../assets/generated/week-05-lab-04/flow.gif)
+
+---
+
 # Lab 4: etcd Snapshot and Restore Drill
 
 **Time:** 55 minutes  
@@ -198,17 +203,78 @@ Capture both error messages and write down:
 
 ---
 
-## Part 6: Recovery Runbook Template
+## Part 6: Production Restore Sequence (CKA Exam Pattern)
+
+The non-destructive rehearsal in Part 4 proves your snapshot is valid. The CKA exam tests the **full restore sequence** — including how you swap a running etcd member to a restored data directory. This sequence is what the exam actually expects you to execute on a kubeadm node.
+
+> This section is command-level documentation. You do not need to execute it against your kind cluster (kind's etcd is inside the control-plane container and the static pod manifest is read-only from the host). Study the sequence and commands; the kind lab validates the snapshot/restore mechanics.
+
+**The full kubeadm restore procedure:**
+
+```bash
+# 1. Move the etcd static pod manifest out of place so kubelet stops etcd.
+#    The API server goes down with it — this is intentional.
+sudo mv /etc/kubernetes/manifests/etcd.yaml /tmp/etcd.yaml.bak
+
+# Wait a few seconds for kubelet to notice the manifest is gone and stop the pod.
+# etcd and kube-apiserver are both down now.
+
+# 2. Restore the snapshot to a new data directory.
+#    etcdutl is offline — no TLS certs, no endpoint needed.
+sudo etcdutl snapshot restore /path/to/snapshot.db \
+  --data-dir=/var/lib/etcd-restored
+
+# 3. Edit the static pod manifest to point etcd at the restored data directory.
+#    Open /tmp/etcd.yaml.bak and change (or add) the --data-dir flag:
+#
+#    containers:
+#    - command:
+#      - etcd
+#      - --data-dir=/var/lib/etcd-restored   ← change from /var/lib/etcd
+#
+#    Also update the hostPath volumes block to match:
+#    volumes:
+#    - hostPath:
+#        path: /var/lib/etcd-restored        ← change from /var/lib/etcd
+#        type: DirectoryOrCreate
+#      name: etcd-data
+sudo vi /tmp/etcd.yaml.bak
+
+# 4. Move the manifest back. kubelet sees the file, starts etcd pointing at the restored dir.
+sudo mv /tmp/etcd.yaml.bak /etc/kubernetes/manifests/etcd.yaml
+
+# 5. Wait for etcd to come up, then verify the API server recovers.
+#    Static pods can take 30-60 seconds to restart.
+kubectl get nodes
+kubectl -n kube-system get pods -l component=etcd
+```
+
+**After restore, verify your marker ConfigMap reflects the snapshot point-in-time:**
+
+```bash
+kubectl -n etcd-lab get configmap restore-marker -o jsonpath='{.data.build}'; echo
+# Should return: before-snapshot
+# If it returns: after-snapshot — the restore picked up post-snapshot state (wrong snapshot)
+```
+
+**Why the static pod manifest edit matters:** `etcd --data-dir` is the path to the on-disk BoltDB files. If you restore to `/var/lib/etcd-restored` but the static pod manifest still points to `/var/lib/etcd`, etcd starts from the old (un-restored) directory and nothing changes. Updating the manifest is the step most exam candidates miss.
+
+> **Reference:** [Backing up an etcd cluster](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/) | [etcdutl snapshot restore](https://etcd.io/docs/v3.5/op-guide/recovery/)
+
+---
+
+## Part 6b: Recovery Runbook Template
 
 Document this sequence in your notes:
 
 1. Capture current cluster symptom
-2. Snapshot etcd before risky actions
-3. Verify snapshot status
-4. Stop API writes (maintenance window)
-5. Restore snapshot to target data-dir
-6. Restart components
-7. Validate core objects and workload health
+2. Snapshot etcd before risky actions (`etcdctl snapshot save`)
+3. Verify snapshot metadata (`etcdutl snapshot status`)
+4. Move etcd static pod manifest out of `/etc/kubernetes/manifests/` to stop etcd
+5. Restore snapshot to a new data directory (`etcdutl snapshot restore --data-dir=...`)
+6. Edit the static pod manifest: update `--data-dir` and the matching `hostPath` volume
+7. Move manifest back — kubelet restarts etcd at the restored directory
+8. Validate core objects and workload health (`kubectl get nodes`, `kubectl get pods -A`)
 
 ---
 

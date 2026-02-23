@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: affinity-preferred
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: affinity-preferred
+  template:
+    metadata:
+      labels:
+        app: affinity-preferred
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: tier
+                operator: In
+                values: ["frontend"]
+          - weight: 50
+            preference:
+              matchExpressions:
+              - key: environment
+                operator: In
+                values: ["production"]
+      containers:
+      - name: nginx
+        image: nginx:1.20
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi

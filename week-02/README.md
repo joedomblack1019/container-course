@@ -1,3 +1,5 @@
+![Week 2 overview hero image](../assets/generated/week-02-overview/hero.png)
+
 # Week 2: Dockerfile Mastery
 
 ## Overview

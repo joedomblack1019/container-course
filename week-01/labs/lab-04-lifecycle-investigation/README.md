@@ -1,3 +1,5 @@
+![Lab 4 hero image](../../../assets/generated/week-01-lab-04/hero.png)
+
 # Lab 3: Container Lifecycle Investigation
 
 **Type:** Independent exploration  

@@ -1,3 +1,5 @@
+![Week 1 overview hero image](../assets/generated/week-01-overview/hero.png)
+
 # Week 1: Container Fundamentals
 
 ## Overview

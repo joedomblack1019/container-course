@@ -1,3 +1,8 @@
+![Lab 05 StorageClass Reclaim Policy and Access Modes](../../../assets/generated/week-05-lab-05/hero.png)
+![Lab 05 storage class and PVC workflow](../../../assets/generated/week-05-lab-05/flow.gif)
+
+---
+
 # Lab 5: StorageClass Reclaim Policy and Access Modes
 
 **Time:** 55 minutes  
@@ -67,6 +72,10 @@ Key fields and their meaning:
 
 **`reclaimPolicy: Retain`** — When you delete the PVC, the PV stays in a `Released` state with data intact. An operator must manually inspect, clean, and re-bind or delete it. Required when data must survive accidental PVC deletion, or when you need an audit trail.
 
+> **CKA exam gotcha — `Released` ≠ `Available`:** A PV in `Released` state still has a `claimRef` pointing at the deleted PVC. Kubernetes will NOT rebind it to a new PVC automatically, even if the new claim matches perfectly. To recycle a Retained PV for reuse you must manually remove the `claimRef` from the PV spec: `kubectl edit pv <name>` → delete the `claimRef` block → PV transitions to `Available` and can be bound again. Getting this wrong under exam pressure is very common.
+
+**`reclaimPolicy: Recycle`** — Deprecated since Kubernetes 1.11 and removed from most CSI provisioners. If you encounter it in older clusters or exam scenarios, it triggered a basic `rm -rf` scrub of the volume before making it `Available` again. Never use it in new clusters; it may still appear in legacy multiple-choice questions.
+
 **`volumeBindingMode: WaitForFirstConsumer`** — The PV is not created until a pod that uses the PVC is scheduled to a node. The provisioner then creates the disk in the same zone as the pod. This is critical in cloud deployments — if you use `Immediate` with a cloud block disk, the disk might be created in `us-east-1a` while the pod schedules to `us-east-1b`, and the mount will fail.
 
 ---
@@ -89,6 +98,8 @@ A cloud block disk (AWS EBS, Azure Disk, GCE Persistent Disk) is a virtual hard 
 RWX requires a **network filesystem**: multiple nodes open a TCP connection to a central NFS or distributed filesystem server and all read/write simultaneously. This is slower but enables shared storage across pods on different nodes.
 
 `ReadWriteOnce` allows multiple pods on the **same node** to mount the volume concurrently. If you need strict single-pod exclusivity (e.g., for a database that can't have two instances touching the same files), use `ReadWriteOncePod` — but check that your CSI driver supports it.
+
+> **CKA exam trap — RWX on block storage:** Exam questions sometimes ask you to create a PVC with `ReadWriteMany` access. If the cluster's StorageClass uses a block storage provisioner (EBS, Azure Disk, local-path), the PVC will stay permanently `Pending` with an event like `volume plugin does not support access mode ReadWriteMany`. The fix is either switching to an NFS-backed StorageClass, or (if the question allows) changing the access mode to `ReadWriteOnce`. Always check `kubectl get storageclass` and `kubectl describe pvc` before assuming a provisioner bug.
 
 ---
 
@@ -149,6 +160,8 @@ How a cloud block disk attaches under the hood (EBS example):
 The zone-locking problem: EBS volumes are created in a specific availability zone. If your pod reschedules to a node in a different AZ, the mount fails — the volume cannot follow it. This is why `WaitForFirstConsumer` is mandatory for cloud block storage: it ensures the volume is created in the AZ where the pod actually lands.
 
 For workloads that need to survive AZ failures, you need a network filesystem (EFS/Azure Files/Filestore) or a distributed block storage layer like Portworx, Rook/Ceph, or Longhorn.
+
+> **Reference:** [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/) | [Persistent Volumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) | [Access Modes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes) | [Reclaim Policy](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaiming)
 
 ---
 
@@ -329,6 +342,24 @@ Expected:
 
 - `local-delete` volume should be cleaned up automatically
 - `local-retain` volume should remain in `Released`/retained state until manual action
+
+If you want to reuse the retained PV, practice the manual reclaim:
+
+```bash
+# Find the PV name
+kubectl get pv
+
+# Edit the PV and delete the entire claimRef block
+kubectl edit pv <pv-name>
+# Remove: claimRef: { ... }
+
+# Confirm it's now Available
+kubectl get pv
+```
+
+A PV only transitions back to `Available` after the `claimRef` is cleared. This is the manual step most people forget under exam pressure.
+
+> **Reference:** [Reclaiming PersistentVolumes](https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaiming)
 
 ---
 

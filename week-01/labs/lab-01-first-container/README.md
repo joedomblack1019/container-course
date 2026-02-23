@@ -1,3 +1,5 @@
+![Lab 1 hero image](../../../assets/generated/week-01-lab-01/hero.png)
+
 # Lab 1: Your First Container
 
 **Time:** 30 minutes  
@@ -299,7 +301,7 @@ Before moving on, verify you can:
 
 ## Demo
 
-![First Container Demo](../../../assets/week-01-lab-01-first-container.gif)
+![First Container Demo](../../../assets/generated/week-01-lab-01/demo.gif)
 
 ---
 

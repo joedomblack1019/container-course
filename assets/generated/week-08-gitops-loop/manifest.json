@@ -1,0 +1,29 @@
+{
+  "id": "week-08-gitops-loop",
+  "title": "The GitOps Loop",
+  "source": "visuals/studio/examples/gitops-lesson.md",
+  "profile": "win98-classic",
+  "dimensions": {
+    "width": 1960,
+    "height": 1104
+  },
+  "hero": "hero.png",
+  "flow": "gitops-flow.gif",
+  "gifs": [
+    {
+      "name": "gitops-flow",
+      "file": "gitops-flow.gif"
+    }
+  ],
+  "info": [
+    {
+      "name": "summary",
+      "file": "info/summary.png"
+    },
+    {
+      "name": "etcd",
+      "file": "info/etcd.png"
+    }
+  ],
+  "generatedAt": "2026-02-19T15:45:40.925Z"
+}

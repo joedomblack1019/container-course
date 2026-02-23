@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: student-jlgore-prod
+  labels:
+    app.kubernetes.io/managed-by: gitops
+    course.ziyotek.edu/course: container-fundamentals
+    course.ziyotek.edu/environment: prod
+    course.ziyotek.edu/student: jlgore

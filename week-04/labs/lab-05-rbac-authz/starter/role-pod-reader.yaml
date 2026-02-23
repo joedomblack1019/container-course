@@ -7,4 +7,6 @@ rules:
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["get", "list", "watch"]
-# TODO: Add pods/log read permission for full lab outcome.
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get"]

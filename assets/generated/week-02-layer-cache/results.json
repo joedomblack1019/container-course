@@ -1,0 +1,60 @@
+{
+  "generated_at_utc": "2026-02-17T22:47:47.420015+00:00",
+  "results": [
+    {
+      "name": "slow_cold",
+      "dockerfile": "Dockerfile",
+      "cold_cache": true,
+      "duration_seconds": 67.115,
+      "total_steps": 5,
+      "cached_steps": 0,
+      "cache_hit_ratio": 0.0,
+      "pip_layer_cached": false,
+      "log_path": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-layer-cache/logs/slow_cold.log"
+    },
+    {
+      "name": "slow_rebuild",
+      "dockerfile": "Dockerfile",
+      "cold_cache": false,
+      "duration_seconds": 64.952,
+      "total_steps": 5,
+      "cached_steps": 1,
+      "cache_hit_ratio": 0.2,
+      "pip_layer_cached": false,
+      "log_path": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-layer-cache/logs/slow_rebuild.log"
+    },
+    {
+      "name": "fast_cold",
+      "dockerfile": "Dockerfile.optimized",
+      "cold_cache": true,
+      "duration_seconds": 66.779,
+      "total_steps": 6,
+      "cached_steps": 0,
+      "cache_hit_ratio": 0.0,
+      "pip_layer_cached": false,
+      "log_path": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-layer-cache/logs/fast_cold.log"
+    },
+    {
+      "name": "fast_rebuild",
+      "dockerfile": "Dockerfile.optimized",
+      "cold_cache": false,
+      "duration_seconds": 0.427,
+      "total_steps": 6,
+      "cached_steps": 3,
+      "cache_hit_ratio": 0.5,
+      "pip_layer_cached": true,
+      "log_path": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-layer-cache/logs/fast_rebuild.log"
+    }
+  ],
+  "summary": {
+    "slow_rebuild_seconds": 64.952,
+    "fast_rebuild_seconds": 0.427,
+    "seconds_saved": 64.525,
+    "speedup_factor": 152.11
+  },
+  "charts": [
+    "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-layer-cache/build_times.png",
+    "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-layer-cache/cache_effectiveness.png"
+  ],
+  "report": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-layer-cache/summary.md"
+}

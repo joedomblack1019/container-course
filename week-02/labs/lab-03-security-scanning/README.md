@@ -1,3 +1,5 @@
+![Lab 3 hero image](../../../assets/generated/week-02-lab-03/hero.png)
+
 # Lab 3: Security Scanning with Trivy
 
 **Time:** 20 minutes  

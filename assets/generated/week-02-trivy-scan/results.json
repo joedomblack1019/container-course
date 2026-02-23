@@ -1,0 +1,80 @@
+{
+  "generated_at_utc": "2026-02-17T23:04:01.407528+00:00",
+  "trivy_version_output": "Version: 0.69.1\nVulnerability DB:\n  Version: 2\n  UpdatedAt: 2026-02-17 18:41:24.856327606 +0000 UTC\n  NextUpdate: 2026-02-18 18:41:24.856327085 +0000 UTC\n  DownloadedAt: 2026-02-17 23:02:28.49678542 +0000 UTC\nCheck Bundle:\n  Digest: sha256:ff1f8aeb19a802446ed4125bd084f2d6f50ad6800328fee24a4bc2f5a03c23c1\n  DownloadedAt: 2026-02-13 22:35:01.184841197 +0000 UTC",
+  "results": [
+    {
+      "version": "v1",
+      "image_tag": "vulnerable-app-bench:v1-20260217230341",
+      "total_vulnerabilities": 130,
+      "severity_counts": {
+        "CRITICAL": 3,
+        "HIGH": 16,
+        "MEDIUM": 58,
+        "LOW": 53,
+        "UNKNOWN": 0
+      },
+      "high_critical_total": 19,
+      "dockerfile_base": "python:3.9-slim",
+      "requirements_snapshot": {
+        "flask": "2.0.1",
+        "requests": "2.25.1",
+        "werkzeug": "2.0.1",
+        "jinja2": "3.0.1"
+      },
+      "build_log_path": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-trivy-scan/logs/v1.build.log",
+      "trivy_log_path": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-trivy-scan/logs/v1.trivy.log",
+      "trivy_json_path": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-trivy-scan/scans/v1.trivy.json"
+    },
+    {
+      "version": "v2",
+      "image_tag": "vulnerable-app-bench:v2-20260217230341",
+      "total_vulnerabilities": 93,
+      "severity_counts": {
+        "CRITICAL": 0,
+        "HIGH": 10,
+        "MEDIUM": 30,
+        "LOW": 53,
+        "UNKNOWN": 0
+      },
+      "high_critical_total": 10,
+      "dockerfile_base": "python:3.11-slim",
+      "requirements_snapshot": {
+        "flask": "2.0.1",
+        "requests": "2.25.1",
+        "werkzeug": "2.0.1",
+        "jinja2": "3.0.1"
+      },
+      "build_log_path": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-trivy-scan/logs/v2.build.log",
+      "trivy_log_path": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-trivy-scan/logs/v2.trivy.log",
+      "trivy_json_path": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-trivy-scan/scans/v2.trivy.json"
+    },
+    {
+      "version": "v3",
+      "image_tag": "vulnerable-app-bench:v3-20260217230341",
+      "total_vulnerabilities": 82,
+      "severity_counts": {
+        "CRITICAL": 0,
+        "HIGH": 5,
+        "MEDIUM": 25,
+        "LOW": 52,
+        "UNKNOWN": 0
+      },
+      "high_critical_total": 5,
+      "dockerfile_base": "python:3.11-slim",
+      "requirements_snapshot": {
+        "flask": "3.0.0",
+        "requests": "2.31.0",
+        "werkzeug": "3.0.1",
+        "jinja2": "3.1.3"
+      },
+      "build_log_path": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-trivy-scan/logs/v3.build.log",
+      "trivy_log_path": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-trivy-scan/logs/v3.trivy.log",
+      "trivy_json_path": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-trivy-scan/scans/v3.trivy.json"
+    }
+  ],
+  "charts": [
+    "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-trivy-scan/trivy_severity_stacked.png",
+    "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-trivy-scan/trivy_high_critical_trend.png"
+  ],
+  "report": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-02-trivy-scan/summary.md"
+}

@@ -34,6 +34,10 @@
 
   "postCreateCommand": "bash .devcontainer/post-create.sh",
 
+  "remoteEnv": {
+    "GIT_LFS_SKIP_SMUDGE": "1"
+  },
+
   "remoteUser": "vscode",
 
   "forwardPorts": [8000, 8080, 5000, 8200],

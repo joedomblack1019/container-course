@@ -1,3 +1,5 @@
+![Lab 3 hero image](../../../assets/generated/week-03-lab-03/hero.png)
+
 # Lab 3: Development Workflow with Bind Mounts
 
 **Time:** 20 minutes  

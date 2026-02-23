@@ -1,3 +1,5 @@
+![Lab 1 hero image](../../../assets/generated/week-03-lab-01/hero.png)
+
 # Lab 1: WordPress + MySQL with Compose
 
 **Time:** 30 minutes  

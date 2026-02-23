@@ -1,0 +1,20 @@
+{
+  "id": "gitops-incident-response",
+  "title": "GitOps Incident Response",
+  "source": "visuals/studio/examples/gitops-incident.md",
+  "profile": "win98-classic",
+  "dimensions": {
+    "width": 1960,
+    "height": 1104
+  },
+  "hero": "hero.png",
+  "flow": "incident-workflow.gif",
+  "gifs": [
+    {
+      "name": "incident-workflow",
+      "file": "incident-workflow.gif"
+    }
+  ],
+  "info": [],
+  "generatedAt": "2026-02-21T21:49:35.485Z"
+}

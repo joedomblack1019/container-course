@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pending-app
+  namespace: sprint-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pending-app
+  template:
+    metadata:
+      labels:
+        app: pending-app
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: REPLACE_NODE
+      containers:
+      - name: app
+        image: nginx:1.27

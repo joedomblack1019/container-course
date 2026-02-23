@@ -1,3 +1,8 @@
+![Lab 01 Helm for Vault Manifests for Redis](../../../assets/generated/week-05-lab-01/hero.png)
+![Lab 01 Helm install and Redis manifest workflow](../../../assets/generated/week-05-lab-01/flow.gif)
+
+---
+
 # Lab 1: Helm for Vault, Manifests for Redis
 
 **Time:** 45 minutes
@@ -365,31 +370,62 @@ It should now show `1/1 READY`. The readiness probe passes because Vault can ser
 
 ### Helm Lifecycle Commands
 
-Practice these — you'll use them constantly:
+Practice these — they are the exam-relevant Helm surface. The CKA 2025 curriculum expects you to install, inspect, upgrade, and roll back releases under time pressure.
 
 ```bash
-# What values did you use?
+# List all installed releases (name, namespace, chart version, status)
+helm list
+
+# What values did you supply (only your overrides)?
 helm get values vault
 
 # ALL values including defaults you didn't override
 helm get values vault --all | head -50
 
-# Release history (revisions)
+# Release history — shows each revision number, timestamp, and status
 helm history vault
 
-# The actual manifests Helm applied
+# The actual manifests Helm applied (useful when troubleshooting what changed)
 helm get manifest vault | head -50
+```
 
-# Upgrade: change a value and re-apply
-# (e.g., increase memory limit in vault-values.yaml, then:)
-# helm upgrade vault hashicorp/vault -f starter/vault-values.yaml
+**`helm upgrade`** — apply changed values to a running release:
 
-# Rollback to a previous revision
-# helm rollback vault 1
+```bash
+# Edit your values file (e.g., increase a memory limit), then apply:
+helm upgrade vault hashicorp/vault -f starter/vault-values.yaml
 
-# Uninstall (we won't do this — we need Vault running)
+# After upgrade, helm history shows revision 2
+helm history vault
+```
+
+**`helm upgrade --install`** — idempotent: installs if not present, upgrades if already installed. This is the preferred pattern for CI/CD pipelines and exam tasks where you can't know the current state:
+
+```bash
+helm upgrade --install vault hashicorp/vault \
+  --namespace vault \
+  --create-namespace \
+  -f starter/vault-values.yaml
+```
+
+**`helm rollback`** — revert to a previous revision by number:
+
+```bash
+# Roll back to revision 1
+helm rollback vault 1
+
+# Confirm rollback appears as a new revision (not a deletion of revision 2)
+helm history vault
+```
+
+**`helm uninstall`** — remove a release and all resources it manages:
+
+```bash
+# We won't run this — Vault needs to stay up
 # helm uninstall vault
 ```
+
+> **CKA exam note:** Know `helm list`, `helm upgrade --install`, `helm get values`, and `helm rollback` cold. You will likely get a task that asks you to install or upgrade a chart with specific values — `upgrade --install` is the safest single command that covers both cases.
 
 ---
 

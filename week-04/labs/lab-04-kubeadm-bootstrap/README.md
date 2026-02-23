@@ -1,3 +1,8 @@
+![Lab 04 kubeadm Bootstrap Foundations](../../../assets/generated/week-04-lab-04/hero.png)
+![Lab 04 kubeadm init and node join workflow](../../../assets/generated/week-04-lab-04/flow.gif)
+
+---
+
 # Lab 4: kubeadm Bootstrap Foundations
 
 **Time:** 75 minutes  
@@ -128,6 +133,8 @@ kubectl get nodes -o wide
 kubectl get pods -n kube-system
 ```
 
+> **Reference:** [Creating a cluster with kubeadm](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/)
+
 ---
 
 ## Part 3: Install CNI and Verify Node Readiness
@@ -178,17 +185,35 @@ Generate a join command you would run on a worker node:
 kubeadm token create --print-join-command
 ```
 
-Capture and explain each segment:
+The output looks like:
 
-- API endpoint
-- token
-- discovery hash
+```
+kubeadm join 192.168.1.10:6443 \
+  --token abcdef.0123456789abcdef \
+  --discovery-token-ca-cert-hash sha256:abc123...
+```
 
-If you have a second VM, execute the command there and validate:
+Anatomy of each segment — you must be able to explain all three on the CKA exam:
+
+| Segment | Meaning |
+|---|---|
+| `192.168.1.10:6443` | API server endpoint workers dial during join |
+| `--token abcdef.0123456789abcdef` | Short-lived bootstrap token (format `<6chars>.<16chars>`). Default TTL is **24 hours**; after expiry the token is useless and a new one must be generated with `kubeadm token create --print-join-command`. List active tokens with `kubeadm token list`. |
+| `--discovery-token-ca-cert-hash sha256:...` | SHA-256 hash of the cluster CA public key. The joining worker verifies this hash against the certificate the API server presents, preventing a man-in-the-middle from redirecting the join to a rogue cluster. |
+
+To regenerate a join command after the original token expires (common in exam scenarios where you are adding a node late):
+
+```bash
+kubeadm token create --print-join-command
+```
+
+If you have a second VM, execute the printed command there as root and then validate on the control-plane:
 
 ```bash
 kubectl get nodes
 ```
+
+> **Reference:** [kubeadm join](https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-join/) | [Bootstrap tokens](https://kubernetes.io/docs/reference/access-authn-authz/bootstrap-tokens/)
 
 ---
 

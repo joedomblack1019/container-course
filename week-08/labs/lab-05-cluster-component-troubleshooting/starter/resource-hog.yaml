@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jerry-hog
+  namespace: sprint-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jerry-hog
+  template:
+    metadata:
+      labels:
+        app: jerry-hog
+    spec:
+      containers:
+      - name: hog
+        image: nginx:1.27
+        resources:
+          requests:
+            cpu: "3"
+            memory: "4Gi"
+          limits:
+            cpu: "4"
+            memory: "6Gi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: victim-app
+  namespace: sprint-lab
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: victim-app
+  template:
+    metadata:
+      labels:
+        app: victim-app
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.27
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"

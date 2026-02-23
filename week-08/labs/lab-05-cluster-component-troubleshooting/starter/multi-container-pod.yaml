@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multi-container-app
+  namespace: sprint-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: multi-container-app
+  template:
+    metadata:
+      labels:
+        app: multi-container-app
+    spec:
+      initContainers:
+      - name: config-checker
+        image: busybox:1.36
+        command: ["sh", "-c", "wget -O /dev/null http://config-service:8080/config || exit 1"]
+      containers:
+      - name: app
+        image: nginx:1.27
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: shared-data
+          mountPath: /usr/share/nginx/html
+      - name: sidecar
+        image: busybox:1.36
+        command: ["sh", "-c", "while true; do echo 'sidecar running' > /shared/status.txt; sleep 30; done"]
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+      volumes:
+      - name: shared-data
+        emptyDir: {}

@@ -1,0 +1,139 @@
+{
+  "generated_at_utc": "2026-02-17T23:34:18.825491+00:00",
+  "policy_file": "/home/jg/git/shart-cloud-gh/containers/container-course/week-06/labs/lab-03-network-policies/solution/network-policy.yaml",
+  "policy_namespace": "student-dev",
+  "summary": {
+    "total_flows": 12,
+    "allowed_before": 12,
+    "allowed_after": 8,
+    "expected_after_allow": 8,
+    "expectation_mismatches": 0
+  },
+  "flows": [
+    {
+      "name": "Gateway to student-app",
+      "source": "gateway",
+      "destination": "student-app",
+      "port": 5000,
+      "protocol": "TCP",
+      "allowed_before": true,
+      "allowed_after": true,
+      "should_work_after_policy": true
+    },
+    {
+      "name": "Gateway to uptime-kuma",
+      "source": "gateway",
+      "destination": "uptime-kuma",
+      "port": 3001,
+      "protocol": "TCP",
+      "allowed_before": true,
+      "allowed_after": true,
+      "should_work_after_policy": true
+    },
+    {
+      "name": "student-app to redis",
+      "source": "student-app",
+      "destination": "redis",
+      "port": 6379,
+      "protocol": "TCP",
+      "allowed_before": true,
+      "allowed_after": true,
+      "should_work_after_policy": true
+    },
+    {
+      "name": "uptime-kuma to student-app",
+      "source": "uptime-kuma",
+      "destination": "student-app",
+      "port": 5000,
+      "protocol": "TCP",
+      "allowed_before": true,
+      "allowed_after": true,
+      "should_work_after_policy": true
+    },
+    {
+      "name": "uptime-kuma to internet HTTPS",
+      "source": "uptime-kuma",
+      "destination": "internet",
+      "port": 443,
+      "protocol": "TCP",
+      "allowed_before": true,
+      "allowed_after": true,
+      "should_work_after_policy": true
+    },
+    {
+      "name": "student-app to internet HTTPS",
+      "source": "student-app",
+      "destination": "internet",
+      "port": 443,
+      "protocol": "TCP",
+      "allowed_before": true,
+      "allowed_after": false,
+      "should_work_after_policy": false
+    },
+    {
+      "name": "redis to internet HTTPS",
+      "source": "redis",
+      "destination": "internet",
+      "port": 443,
+      "protocol": "TCP",
+      "allowed_before": true,
+      "allowed_after": false,
+      "should_work_after_policy": false
+    },
+    {
+      "name": "student-app to DNS",
+      "source": "student-app",
+      "destination": "dns",
+      "port": 53,
+      "protocol": "UDP",
+      "allowed_before": true,
+      "allowed_after": true,
+      "should_work_after_policy": true
+    },
+    {
+      "name": "redis to DNS",
+      "source": "redis",
+      "destination": "dns",
+      "port": 53,
+      "protocol": "UDP",
+      "allowed_before": true,
+      "allowed_after": true,
+      "should_work_after_policy": true
+    },
+    {
+      "name": "uptime-kuma to DNS",
+      "source": "uptime-kuma",
+      "destination": "dns",
+      "port": 53,
+      "protocol": "UDP",
+      "allowed_before": true,
+      "allowed_after": true,
+      "should_work_after_policy": true
+    },
+    {
+      "name": "Gateway to redis",
+      "source": "gateway",
+      "destination": "redis",
+      "port": 6379,
+      "protocol": "TCP",
+      "allowed_before": true,
+      "allowed_after": false,
+      "should_work_after_policy": false
+    },
+    {
+      "name": "uptime-kuma to redis",
+      "source": "uptime-kuma",
+      "destination": "redis",
+      "port": 6379,
+      "protocol": "TCP",
+      "allowed_before": true,
+      "allowed_after": false,
+      "should_work_after_policy": false
+    }
+  ],
+  "summary_markdown": "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-06-network-policies/summary.md",
+  "charts": [
+    "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-06-network-policies/networkpolicy_flow_matrix.png",
+    "/home/jg/git/shart-cloud-gh/containers/container-course/assets/generated/week-06-network-policies/networkpolicy_allowed_by_source.png"
+  ]
+}

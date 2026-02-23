@@ -2,7 +2,20 @@
 set -euo pipefail
 
 backup="/tmp/coredns-backup.yaml"
-kubectl -n kube-system get configmap coredns -o yaml > "$backup"
+corefile=$(kubectl -n kube-system get configmap coredns -o go-template='{{index .data "Corefile"}}')
+
+{
+  cat <<'EOF'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns
+  namespace: kube-system
+data:
+  Corefile: |
+EOF
+  printf '%s\n' "$corefile" | sed 's/^/    /'
+} > "$backup"
 
 kubectl -n kube-system get configmap coredns -o yaml \
   | sed 's#/etc/resolv.conf#127.0.0.1#' \

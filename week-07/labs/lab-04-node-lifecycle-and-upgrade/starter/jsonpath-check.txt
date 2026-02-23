@@ -1,0 +1,11 @@
+# Fill each VALUE using kubectl output-formatting commands (`-o jsonpath` and/or `--sort-by`).
+# Keep only the value on each line (no extra spaces).
+#
+# Prompt 1: Control plane node name
+CONTROL_PLANE_NODE=
+# Prompt 2: First pod name in ops-lab sorted by creation time
+FIRST_OPS_POD_BY_CREATION=
+# Prompt 3: Node name for that first pod
+FIRST_OPS_POD_NODE=
+# Prompt 4: Worker node count
+WORKER_COUNT=

@@ -1,0 +1,30 @@
+profiles:
+  industrial-control:
+    label: Industrial Control Room
+    description: Steel blue, telemetry accents, hard-edged signal panels.
+  terminal-amber:
+    label: Amber Terminal
+    description: Warm monochrome amber for incident narratives.
+  blueprint:
+    label: Blueprint
+    description: Deep navy schematic styling for infrastructure concepts.
+  msdos-curses:
+    label: MSDOS ncurses
+    description: Green phosphor terminal palette with amber highlights.
+  win98-classic:
+    label: Win98 Classic
+    description: 98.css window chrome, bitmap-like typography, segmented progress bars.
+
+scenes:
+  gitops-loop:
+    component: GitOpsLoopScene
+    supportsAnimation: true
+  etcd-replication:
+    component: EtcdReplicationScene
+    supportsAnimation: true
+  info-summary:
+    component: InfoSummaryScene
+    supportsAnimation: false
+  gitops-incident:
+    component: DesktopScene
+    supportsAnimation: true

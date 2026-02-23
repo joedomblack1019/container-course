@@ -1,3 +1,5 @@
+![Lab 1 hero image](../../../assets/generated/week-02-lab-01/hero.png)
+
 # Lab 1: Layer Optimization Challenge
 
 **Time:** 25 minutes  

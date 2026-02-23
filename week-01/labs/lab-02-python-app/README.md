@@ -1,3 +1,5 @@
+![Lab 2 hero image](../../../assets/generated/week-01-lab-02/hero.png)
+
 # Lab 2: Build Your Python App Container
 
 **Time:** 40 minutes  
@@ -449,7 +451,7 @@ Keep your images—we'll push them to a registry in Lab 3!
 
 ## Demo
 
-![Docker Build Demo](../../../assets/week-01-lab-02-docker-build.gif)
+![Docker Build Demo](../../../assets/generated/week-01-lab-02/demo.gif)
 
 ---
 

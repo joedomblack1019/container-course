@@ -1,3 +1,5 @@
+![Lab 2 hero image](../../../assets/generated/week-03-lab-02/hero.png)
+
 # Lab 2: Network Debugging
 
 **Time:** 30 minutes  

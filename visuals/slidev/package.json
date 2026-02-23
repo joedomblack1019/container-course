@@ -1,0 +1,23 @@
+{
+  "name": "container-course-slidev-visuals",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev:showcase": "slidev win95-showcase.md",
+    "dev:week01": "slidev week-01-overview.md",
+    "dev:lab01": "slidev week-01-lab-01.md",
+    "dev:lab02": "slidev week-01-lab-02.md",
+    "dev:lab03": "slidev week-01-lab-03.md",
+    "dev:lab04": "slidev week-01-lab-04.md",
+    "dev:rbac": "slidev week-04-rbac-authz.md",
+    "dev:psa": "slidev week-04-pod-security-admission.md",
+    "dev:gitops": "slidev week-08-gitops-loop.md",
+    "export:deck": "bash scripts/export-deck.sh",
+    "export:all": "bash scripts/export-all.sh"
+  },
+  "devDependencies": {
+    "@slidev/cli": "latest",
+    "@slidev/theme-default": "latest",
+    "playwright-chromium": "^1.58.2"
+  }
+}

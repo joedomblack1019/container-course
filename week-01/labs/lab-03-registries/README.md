@@ -1,3 +1,5 @@
+![Lab 3 hero image](../../../assets/generated/week-01-lab-03/hero.png)
+
 # Lab 3: Push to Container Registries
 
 **Time:** 20 minutes  
@@ -462,6 +464,12 @@ Docker Hub advantages:
 - Default registry (no prefix needed for pull)
 - Larger ecosystem of public images
 - Official images for popular software
+
+---
+
+## Demo
+
+![Container Registries Demo](../../../assets/generated/week-01-lab-03/demo.gif)
 
 ---
 

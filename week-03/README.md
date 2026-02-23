@@ -1,3 +1,5 @@
+![Week 3 overview hero image](../assets/generated/week-03-overview/hero.png)
+
 # Week 3: Compose & Local Development
 
 ## Overview

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: course-metrics-exporter
+  labels:
+    app: course-metrics-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: course-metrics-exporter
+  template:
+    metadata:
+      labels:
+        app: course-metrics-exporter
+    spec:
+      containers:
+        - name: exporter
+          image: course-metrics-exporter:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 9100
+              name: metrics
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-credentials
+                  key: REDIS_PASSWORD
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "25m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9100
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 9100
+            initialDelaySeconds: 10
+            periodSeconds: 15
