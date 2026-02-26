@@ -18,7 +18,7 @@ Kubernetes has two batch primitives built for this: **Job** for "run this once" 
 
 ---
 
-## Jobs vs Deployments — The Model
+## Background: Jobs vs Deployments — The Model
 
 ```
 Deployment
@@ -345,12 +345,32 @@ kubectl get job db-seed -w
 
 ---
 
+## Verification Checklist
+
+You are done when you can:
+
+- [ ] Create a one-shot Job and verify completion status
+- [ ] Explain and demonstrate `completions`, `parallelism`, and `backoffLimit`
+- [ ] Diagnose a failed Job using `describe` and logs
+- [ ] Create a CronJob and observe scheduled Job creation
+- [ ] Trigger a CronJob manually with `kubectl create job --from=cronjob/...`
+- [ ] Explain how `ttlSecondsAfterFinished` affects cleanup behavior
+
+---
+
 ## Cleanup
 
 ```bash
 kubectl delete job db-backup process-reports jerry-migration with-ttl db-seed --ignore-not-found
 kubectl delete cronjob nightly-cleanup heartbeat --ignore-not-found
 ```
+
+---
+
+## Reinforcement Scenarios
+
+- `jerry-container-log-mystery`
+- `jerry-probe-failures`
 
 ---
 

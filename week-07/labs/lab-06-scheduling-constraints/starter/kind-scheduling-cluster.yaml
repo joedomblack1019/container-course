@@ -4,6 +4,15 @@ name: scheduling
 nodes:
 - role: control-plane
 - role: worker
+  # scheduling-worker: constrained to 6 max pods so Part 1 (nodeSelector saturation)
+  # reliably shows Pending pods. A kind node otherwise reports the full host CPU,
+  # which means 16+ small pods all schedule without issue on any modern machine.
+  kubeadmConfigPatches:
+  - |
+    kind: JoinConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        max-pods: "6"
 - role: worker
 - role: worker
 networking:

@@ -10,6 +10,18 @@
 
 ---
 
+## The Story
+
+Manual `kubectl apply` works for one engineer and one cluster until drift appears, reviews are skipped, and nobody can answer what changed. This lab shifts you to production-style delivery: submit desired state through Git, let ArgoCD reconcile it, and validate outcomes in your own namespace.
+
+---
+
+## Background: GitOps and Namespace Isolation
+
+GitOps treats Git as the source of truth and the cluster as a reconciled target. Namespace boundaries provide multi-tenant safety so every student can ship independently without name collisions or broad cluster access. Together, these patterns create an auditable and safer deployment model.
+
+---
+
 ## What is GitOps?
 
 Up to this point, you've deployed to Kubernetes by running `kubectl apply` from your laptop. That works, but think about what happens at scale: multiple people deploying different things, no record of who changed what, no easy way to undo a bad deploy, and no guarantee that what's running in the cluster matches what's in your repo.
@@ -342,7 +354,7 @@ The `/info` endpoint should return pod metadata. Notice that `ENVIRONMENT` shows
 
 ---
 
-## Checkpoint
+## Verification Checklist
 
 Before you're done, verify:
 
@@ -353,3 +365,10 @@ Before you're done, verify:
 - [ ] Your PR is submitted to `ziyotek-edu/talos-gitops` (or merged)
 - [ ] After merge: pods are running in `student-<username>-dev`
 - [ ] After merge: `/info` returns correct `ENVIRONMENT` (your dev namespace name)
+
+---
+
+## Reinforcement Scenarios
+
+- `jerry-gitops-manual-override`
+- `jerry-kubeconfig-context-confusion`

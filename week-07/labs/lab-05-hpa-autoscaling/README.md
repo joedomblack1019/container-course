@@ -1,50 +1,201 @@
+![Lab 05 HPA Autoscaling](../../../assets/generated/week-07-lab-05/hero.png)
+![Lab 05 HPA scaling workflow](../../../assets/generated/week-07-lab-05/flow.gif)
+
+---
+
 # Lab 5: Horizontal Pod Autoscaler (HPA)
 
-**Time:** 20-25 minutes
-**Objective:** Set up automated scaling based on CPU utilization
+**Time:** 35 minutes
+**Objective:** Configure HPA to automatically scale a Deployment based on CPU utilization, observe the scale-up and scale-down cycle, and understand what breaks when the metrics pipeline is missing.
 
 ---
 
 ## The Story
 
-In **Week 4 Lab 2**, you manually scaled your app with `kubectl scale deployment student-app --replicas=3`. But what happens when traffic spikes at 3 AM? HPA watches metrics and scales for you.
+It is 3 AM. Your on-call phone goes off. The dashboard shows request latency climbing and error rates spiking. You SSH in, see one pod at 98% CPU, and manually run `kubectl scale deployment student-app --replicas=4`. Latency drops. You go back to bed.
 
-This lab shows you how to configure workload autoscaling — a core CKA competency.
+Two hours later the phone goes off again. Traffic spiked again while you were asleep.
+
+You cannot be the autoscaler. That is what this lab fixes.
+
+HPA watches a metrics signal — CPU utilization by default — and continuously adjusts replica count to keep that signal near a target value. When load rises, it scales up. When load falls, it waits long enough to be sure, then scales down. You define the policy once and stop being woken up at 3 AM.
 
 ---
 
-## Part 1: Install metrics-server in kind
+## CKA Objectives Mapped
 
-HPA needs metrics to make scaling decisions. The `metrics-server` collects resource usage from kubelets, but it doesn't work in kind by default due to self-signed certificates.
+- Implement autoscaling (HPA)
+- Understand metrics-server as a prerequisite for HPA
+- Troubleshoot HPA not scaling (missing requests, missing metrics-server)
+
+---
+
+## Background: How HPA Works
+
+### The control loop
+
+HPA is a Kubernetes controller that runs a reconciliation loop on a configurable interval (default: 15 seconds). Each cycle it does three things:
+
+1. **Fetches current metrics** from the metrics pipeline (metrics-server for CPU/memory, or a custom adapter for application metrics)
+2. **Calculates desired replicas** using the formula: `desiredReplicas = ceil(currentReplicas × (currentMetricValue / desiredMetricValue))`
+3. **Updates the Deployment** replica count if the result differs from current replicas
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                      HPA Control Loop                   │
+│                                                         │
+│  ┌──────────────┐    metrics    ┌──────────────────┐   │
+│  │ metrics-server│◄─────────────│ kubelet (on node) │   │
+│  └──────┬───────┘               └──────────────────┘   │
+│         │ CPU/memory                                     │
+│         ▼                                               │
+│  ┌──────────────┐  scale up/down  ┌────────────────┐   │
+│  │     HPA      │────────────────►│   Deployment   │   │
+│  │  controller  │                 │  (replicas: N) │   │
+│  └──────────────┘                 └────────────────┘   │
+│         ▲                                               │
+│         │ targetCPU = 50%                               │
+│         │ currentCPU = 80% → scale up                  │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Why resource requests are required
+
+HPA calculates CPU utilization as a **percentage of the pod's CPU request**, not of the node's total CPU. If a pod has no `resources.requests.cpu` set, the denominator is zero and HPA cannot compute a meaningful percentage. The HPA will report `<unknown>` for current utilization and will not scale.
+
+This is the most common reason HPA "doesn't work" in practice.
+
+### The metrics-server dependency
+
+`kubectl top` and HPA both depend on `metrics-server`, which collects resource usage from kubelet on each node and exposes it through the Kubernetes Metrics API (`metrics.k8s.io`). If metrics-server is not installed or unhealthy, HPA enters a degraded state — it does not scale to max, it does not scale to min, it freezes at its current replica count and logs a condition indicating the metrics source is unavailable.
+
+### Scale-down stabilization
+
+HPA deliberately delays scale-down to prevent thrashing. After load drops, it waits for a `stabilizationWindowSeconds` period (default: 300 seconds / 5 minutes) before reducing replicas. This prevents a brief traffic lull from triggering a scale-down that immediately needs to reverse when the next request burst hits.
+
+**Further reading:**
+- [Horizontal Pod Autoscaling (Kubernetes docs)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/)
+- [HPA walkthrough](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/)
+- [metrics-server](https://github.com/kubernetes-sigs/metrics-server)
+
+---
+
+## Prerequisites
+
+Use your local kind cluster:
 
 ```bash
-# Install metrics-server
+kubectl config use-context kind-lab
+kubectl get nodes
+```
+
+### Check for student-app
+
+This lab requires a `student-app` Deployment and `student-app-svc` Service. Check if they exist:
+
+```bash
+kubectl get deployment student-app
+kubectl get service student-app-svc
+```
+
+**If both are running, skip ahead to Part 1.**
+
+### Redeploy Week 4 (if needed)
+
+If either resource is missing, run the block below. It deploys a minimal nginx-based stand-in that behaves the same way for HPA purposes — it serves HTTP traffic, has resource requests, and is accessible via the same Service name the load generator expects.
+
+```bash
+kubectl apply -f - <<'EOF'
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: student-app
+  labels:
+    app: student-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: student-app
+  template:
+    metadata:
+      labels:
+        app: student-app
+    spec:
+      containers:
+      - name: student-app
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: student-app-svc
+  labels:
+    app: student-app
+spec:
+  selector:
+    app: student-app
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+    name: http
+EOF
+
+kubectl rollout status deployment/student-app --timeout=60s
+```
+
+Verify both are ready before continuing:
+
+```bash
+kubectl get deployment student-app
+kubectl get service student-app-svc
+```
+
+---
+
+## Part 1: Install metrics-server
+
+HPA cannot function without a working metrics pipeline. In kind, metrics-server requires a small patch to accept self-signed kubelet certificates.
+
+```bash
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 
-# Patch for kind (allow insecure TLS)
 kubectl -n kube-system patch deployment metrics-server --type=json \
   -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
 
-# Wait for it to be ready
-kubectl -n kube-system rollout status deployment/metrics-server
+kubectl -n kube-system rollout status deployment/metrics-server --timeout=90s
 
-# Verify (should show CPU/memory usage after ~60 seconds)
+# Wait ~60 seconds, then verify
 kubectl top nodes
+kubectl top pods
 ```
 
-If `kubectl top nodes` returns data, metrics-server is working.
+Notice: `kubectl top` is point-in-time — like running `htop` on a server. It tells you what is happening right now but retains no history. Prometheus gives you history and alerting. Both are useful; CKA tests `kubectl top`. Do not move on until `kubectl top nodes` returns data.
+
+Operator mindset: if `kubectl top` has no data, do not debug HPA yet; restore metrics first, then evaluate scaling behavior.
 
 ---
 
-## Part 2: Create an HPA (Imperative)
+## Part 2: Ensure Resource Requests Exist
 
-First, ensure your app has resource requests set (from Week 4 Lab 2):
+HPA computes utilization as a percentage of the pod's CPU request. Without requests, HPA reports `<unknown>` and will not scale.
 
 ```bash
-kubectl describe deployment student-app | grep -A2 -B2 requests
+kubectl describe deployment student-app | grep -A4 requests
 ```
 
-If no requests are set, the HPA can't calculate CPU percentage. Update your deployment:
+If requests are missing, patch them in:
 
 ```bash
 kubectl patch deployment student-app -p='
@@ -67,22 +218,35 @@ kubectl patch deployment student-app -p='
     }
   }
 }'
+kubectl rollout status deployment/student-app
 ```
 
-Now create the HPA:
+Notice: `100m` CPU request means "one tenth of a CPU core." If this pod consumes 80m actual CPU, that is 80% utilization from HPA's perspective — even though the node itself may be nearly idle. The percentage is always relative to the request, not the node.
+
+Operator mindset: if HPA `TARGETS` is `<unknown>` or percentages look wrong, verify CPU requests first because they define autoscaling math.
+
+---
+
+## Part 3: Create an HPA (Imperative)
+
+The fastest way to attach an HPA to a Deployment on the CKA exam:
 
 ```bash
 kubectl autoscale deployment student-app --cpu-percent=50 --min=1 --max=5
 kubectl get hpa -w
 ```
 
-The HPA targets 50% CPU utilization. When average CPU exceeds 50%, it scales up. When below 50%, it scales down.
+Wait for the `TARGETS` column to show a real percentage rather than `<unknown>`. This can take up to 60 seconds after metrics-server is ready.
+
+Notice: while `kubectl autoscale` is fast to type, the resulting object uses the older `autoscaling/v1` API. For production YAML you will want `autoscaling/v2`, which supports memory metrics and custom metric types. Know both for the exam.
+
+Exam note: imperative commands are useful for speed; verify the generated API version and fields before carrying it into production manifests.
 
 ---
 
-## Part 3: Create an HPA (Declarative)
+## Part 4: Create an HPA (Declarative)
 
-You can also define HPA in YAML. Delete the existing HPA and recreate it:
+Delete the imperative HPA and recreate it from YAML so you can see and control every field:
 
 ```bash
 kubectl delete hpa student-app
@@ -111,17 +275,15 @@ spec:
         averageUtilization: 50
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 300  # Wait 5 minutes before scaling down
+      stabilizationWindowSeconds: 60  # shortened for lab speed; production default is 300
 ```
-
-Apply it:
 
 ```bash
 kubectl apply -f student-app-hpa.yaml
 kubectl get hpa
 ```
 
-Explore the HPA spec using familiar commands:
+Explore the API shape before experimenting:
 
 ```bash
 kubectl explain hpa.spec
@@ -129,124 +291,121 @@ kubectl explain hpa.spec.metrics
 kubectl explain hpa.spec.behavior
 ```
 
+Notice: the `stabilizationWindowSeconds` is set to 60 here instead of the production default of 300 so you can actually observe scale-down in a lab session. In production, 300 seconds prevents thrashing during normal traffic variance.
+
+Authoring note: read the API docs for the fields you are writing — `kubectl explain` is the exam-safe equivalent of external docs.
+
 ---
 
-## Part 4: Generate Load and Watch Scaling
+## Part 5: Generate Load and Watch Scale-Up
 
-Create a load generator to drive CPU usage:
+Open three terminals. In terminal 1, start the load generator:
 
 ```bash
-# Start load generator (runs until you Ctrl+C)
 kubectl run load-gen --rm -it --restart=Never --image=busybox -- \
   /bin/sh -c "while true; do wget -q -O- http://student-app-svc; done"
 ```
 
-In another terminal, watch the HPA and pods scale:
+In terminal 2, watch the HPA:
 
 ```bash
-# Watch HPA metrics and target replicas
 kubectl get hpa -w
+```
 
-# In a third terminal, watch pods being created
+In terminal 3, watch the pods:
+
+```bash
 kubectl get pods -w
 ```
 
-You should see:
-1. CPU usage climbing in the HPA output
-2. Current replicas increasing from 1 → 2 → 3 → etc.
-3. New pods being created
+You should see CPU in the TARGETS column climb past 50%, then `REPLICAS` increment as HPA schedules additional pods.
+
+Notice: there is a lag between CPU rising and new pods serving traffic. The HPA sync interval is 15 seconds, pod startup takes additional time, and the new pods must pass readiness checks before the Service routes to them. This pipeline delay is why you should set your HPA targets conservatively rather than at 90% — you want headroom to absorb load while new pods spin up.
+
+Performance note: autoscaling is not instantaneous. Size your target threshold to account for HPA sync interval, startup, and readiness delay.
 
 ---
 
-## Part 5: Stop Load and Watch Scale Down
+## Part 6: Stop Load and Watch Scale-Down
 
-Kill the load generator (Ctrl+C in the first terminal).
+Kill the load generator (Ctrl+C in terminal 1).
 
-Watch the HPA scale back down:
+Watch the HPA in terminal 2. CPU will drop, but replicas will not immediately decrease — the stabilization window holds them in place.
 
 ```bash
 kubectl get hpa -w
+kubectl describe hpa student-app-hpa
 ```
 
-HPA waits ~5 minutes (the `stabilizationWindowSeconds`) before scaling down to prevent thrashing.
+Look at the `Conditions` section in `describe` output. You will see a `ScalingActive` condition and a `ScalingLimited` condition that explain HPA's current reasoning.
+
+Notice: HPA stabilization prevents a scenario where a brief traffic lull causes a scale-down that immediately reverses when the next request burst arrives — which would cause Kubernetes to thrash between replica counts. The cooldown trades a little wasted capacity for scheduling stability.
+
+Tuning note: scale-down delay is a feature, not a bug — tune stabilization to your traffic pattern instead of optimizing for instant scale-in.
 
 ---
 
-## HPA vs VPA (Exam Note)
+## Part 7: Break the Metrics Pipeline
 
-- **HPA** changes replica count (`Deployment.spec.replicas`) based on usage signals.
-- **VPA** changes pod CPU/memory requests and limits per container.
-- For CKA scenarios, default to HPA workflows unless the prompt explicitly asks about right-sizing requests.
-- In production, avoid letting HPA and VPA both control CPU/memory for the same workload without explicit policy guardrails.
+This is the failure mode you are most likely to encounter in production and on the CKA.
+
+```bash
+kubectl scale deployment metrics-server -n kube-system --replicas=0
+```
+
+Wait 30 seconds, then observe HPA:
+
+```bash
+kubectl get hpa
+kubectl describe hpa student-app-hpa | grep -A5 Conditions
+```
+
+Notice: HPA does not scale to max replicas, and it does not scale to min replicas. It freezes. The `AbleToScale` condition will show `False` with a reason referencing the unavailable metrics source. This is the correct safe behavior — HPA should not guess when its data source is gone.
+
+Restore metrics-server:
+
+```bash
+kubectl scale deployment metrics-server -n kube-system --replicas=1
+kubectl -n kube-system rollout status deployment/metrics-server
+kubectl top nodes
+```
+
+Operator mindset: if HPA stops scaling, check metrics availability before touching the Deployment, or you risk masking the real fault.
 
 ---
 
-## Part 6 (Optional): Generate HPA Timeline Charts
+## HPA vs VPA
 
-If you want a time-series visualization of autoscaling behavior:
+HPA and VPA solve different problems and should not both target the same resource signal on the same workload without careful policy configuration.
 
-```bash
-cd week-07/labs/lab-05-hpa-autoscaling
-python3 scripts/benchmark_hpa.py --namespace default
-```
+HPA changes the **number of pods** in response to a utilization signal. It is the right tool when your workload scales horizontally and individual pod capacity is roughly fixed. VPA changes the **CPU and memory requests and limits** of individual pods to right-size them for their actual consumption. It is the right tool when you want to stop over-provisioning or under-provisioning individual containers.
 
-This script will:
-- Start a load-generator pod against `student-app-svc`
-- Sample HPA and Deployment status every few seconds
-- Stop load and continue sampling cooldown behavior
-- Generate timeline charts and a summary
+For CKA scenarios, default to HPA unless the prompt specifically asks about right-sizing resource requests.
 
-Requirements:
-- `student-app` deployment exists
-- `student-app-hpa` exists
-- metrics-server is working (`kubectl top nodes` returns data)
-- Python 3
-- `matplotlib` installed (for PNG chart output)
+---
 
-Useful options:
+## Verification Checklist
 
-```bash
-# Shorter run for quick tests
-python3 scripts/benchmark_hpa.py --namespace default --load-seconds 60 --cooldown-seconds 60
+You are done when:
 
-# If you used imperative HPA name from Part 2 (`student-app`)
-python3 scripts/benchmark_hpa.py --namespace default --hpa student-app
-
-# Capture only (no load generator)
-python3 scripts/benchmark_hpa.py --namespace default --skip-load
-
-# Collect data only (no charts)
-python3 scripts/benchmark_hpa.py --namespace default --no-charts
-```
-
-Artifacts are written to:
-
-```text
-assets/generated/week-07-hpa-autoscaling/
-  hpa_timeline.png
-  deployment_replica_timeline.png
-  summary.md
-  results.json
-```
-
-![HPA Timeline Chart](../../../assets/generated/week-07-hpa-autoscaling/hpa_timeline.png)
-
-![Deployment Replica Timeline Chart](../../../assets/generated/week-07-hpa-autoscaling/deployment_replica_timeline.png)
+- `kubectl top nodes` returns CPU and memory data
+- HPA TARGETS shows a real percentage (not `<unknown>`)
+- Replica count increases under load
+- Replica count decreases after load stops (wait for stabilization window)
+- You can describe HPA Conditions and interpret what they say
+- You can explain what happens to HPA when metrics-server is unavailable
 
 ---
 
 ## Discovery Questions
 
-1. **Conflict Resolution:** Set `kubectl scale deployment student-app --replicas=3` while HPA `minReplicas: 1`. Which wins? Why?
+1. **Conflict:** You run `kubectl scale deployment student-app --replicas=3` while HPA has `minReplicas: 1`. Which wins? Try it and find out.
 
-2. **Metrics Lag:** Your HPA shows `cpu-percent=50` but `kubectl top pods` shows 80% CPU for individual pods. Why hasn't it scaled yet?
-   - *Hint:* Check `kubectl describe hpa student-app` and look at the Conditions section.
+2. **Metrics lag:** Your HPA shows `cpu-percent=50` but `kubectl top pods` shows 80% CPU for individual pods. Why hasn't it scaled yet? Check `kubectl describe hpa student-app-hpa` and look at the Conditions section.
 
-3. **Failure Modes:** What happens if metrics-server goes down? Does HPA scale to max replicas? To min? Neither?
-   - *Hint:* Try `kubectl scale deployment metrics-server -n kube-system --replicas=0` and observe HPA behavior.
+3. **Memory autoscaling:** Can you autoscale based on memory instead of CPU? Check `kubectl explain hpa.spec.metrics.resource.name`. What's different about memory as a scaling signal compared to CPU?
 
-4. **Resource Types:** Can you autoscale based on memory usage instead of CPU? What about custom metrics?
-   - *Hint:* Check `kubectl explain hpa.spec.metrics.resource.name`.
+4. **Requests missing:** Delete the resource requests from your Deployment (`kubectl edit deployment student-app`), wait 60 seconds, and check what HPA reports. Then restore them and watch HPA recover.
 
 ---
 
@@ -260,10 +419,7 @@ kubectl scale deployment student-app --replicas=1
 
 ---
 
-## Key Takeaways
+## Reinforcement Scenarios
 
-- HPA automates what you did manually with `kubectl scale`
-- Requires metrics-server for CPU/memory-based scaling
-- Targets resource utilization percentages, not absolute values
-- Has built-in stabilization to prevent rapid scale up/down cycles
-- CKA exam may ask for both imperative (`kubectl autoscale`) and declarative (YAML manifest) approaches
+- `jerry-hpa-not-scaling`
+- `jerry-metrics-server-down`

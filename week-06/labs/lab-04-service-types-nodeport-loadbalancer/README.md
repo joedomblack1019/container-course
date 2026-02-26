@@ -286,7 +286,7 @@ Takeaway:
 
 ---
 
-## Validation Checklist
+## Verification Checklist
 
 You are done when:
 
@@ -306,6 +306,6 @@ kubectl delete deployment svc-types-demo --ignore-not-found
 
 ---
 
-## Reinforcement Scenario
+## Reinforcement Scenarios
 
 - `jerry-nodeport-mystery`

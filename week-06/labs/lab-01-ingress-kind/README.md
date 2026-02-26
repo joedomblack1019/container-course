@@ -350,7 +350,7 @@ kubectl config get-contexts  # confirm kind-lab context is gone
 
 ---
 
-## Checkpoint ✅
+## Verification Checklist
 
 Before moving on, verify:
 
@@ -361,6 +361,12 @@ Before moving on, verify:
 - [ ] You can explain what `ingressClassName: nginx` does and why removing it would break routing
 - [ ] You can trace the full request path: curl → host port → kind node → nginx controller → Service → Pod
 - [ ] You understand why the `EXTERNAL-IP` on the ingress-nginx Service stays `<pending>` in kind
+
+---
+
+## Reinforcement Scenarios
+
+- `jerry-broken-ingress-host`
 
 ---
 

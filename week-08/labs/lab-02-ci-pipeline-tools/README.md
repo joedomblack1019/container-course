@@ -6,82 +6,139 @@
 # Lab 2: CI/CD Pipeline Deep Dive
 
 **Time:** 50 minutes
-**Objective:** Understand the 8-stage DevSecOps pipeline by running each tool locally
+**Objective:** Understand the 8-stage DevSecOps pipeline by running each tool locally, seeing what each one catches, and intentionally breaking things to read the output before CI automates it for you.
 
 ---
 
 ## The Story
 
-You've been pushing code and trusting that "it works." But in production, every commit passes through security gates before it reaches a cluster. The portfolio template has an 8-stage pipeline that checks code quality, scans for vulnerabilities, validates Kubernetes manifests, and runs integration tests — all before a single byte touches your cluster.
+You have been pushing code and trusting that things work. In production, that trust is not enough.
 
-Before you let it run in GitHub, you're going to understand each tool by running it yourself. When a tool flags something, you'll know exactly what it caught and why.
+Every commit that reaches your cluster passed through a gauntlet of automated checks first. Code quality gates catch mistakes before they become bugs. Security scanners catch vulnerabilities before they become incidents. Kubernetes manifest validation catches misconfigurations before ArgoCD tries to apply them and fails in production.
+
+The portfolio template has an 8-stage pipeline that runs all of these checks. Before you let it run automatically in GitHub, you are going to run every tool yourself. When a tool flags something — and you will make it flag things on purpose — you will know exactly what it caught and why. CI is not magic. It is just a script that runs the same tools you are about to run.
 
 ---
 
-## Starting Point
+## Background: The DevSecOps Pipeline Model
 
-You should have your fork of `container-devsecops-template` cloned locally (from Lab 1).
+### Why pipelines are structured the way they are
+
+A well-designed CI pipeline is built around two principles: **fail fast** and **parallelize safely**.
+
+Fail fast means cheap checks run before expensive ones. If `ruff` finds a syntax error in 3 seconds, there is no point spending 2 minutes building a container image. The pipeline should reject bad commits as early and cheaply as possible.
+
+Parallelize safely means independent checks run at the same time. The Kubernetes manifest validation does not need a built container image to check if the YAML is valid — it can run in parallel with the container build track, then both tracks converge at the final deploy step.
+
+```
+commit
+  |
+  v
+[code-quality]  <-- ruff + bandit (runs first, no dependencies)
+  |
+  +---------------------------+
+  |                           |
+  v                           v
+[dockerfile-scan]        [k8s-validate]  <-- parallel tracks
+  |                           |
+  v                           |
+[build]                       |
+  |                           |
+  +--+                        |
+  |  |                        |
+  v  v                        |
+[container-scan] [integration-test]      |
+  |         |                 |
+  v         +--------+--------+
+[push]               |
+  |                  v
+  +---------> [update-tag]  <-- converge here, main branch only
+```
+
+### The 8 stages
+
+| Stage | Tool(s) | What it catches | Depends on |
+|---|---|---|---|
+| `code-quality` | ruff, bandit | Style errors, security anti-patterns in Python | Nothing |
+| `dockerfile-scan` | hadolint, trivy config | Bad Dockerfile practices, misconfigurations | code-quality |
+| `build` | docker build | Build failures, missing files, broken dependencies | dockerfile-scan |
+| `container-scan` | trivy image | Known CVEs in installed packages | build |
+| `push` | GHCR | Publishes image (main branch only) | build + container-scan |
+| `k8s-validate` | kubeconform | Invalid Kubernetes API schemas, typos in manifests | code-quality |
+| `integration-test` | curl/pytest | Runtime failures — does the container actually start and respond? | build |
+| `update-tag` | git commit | Writes new image SHA back to Git for ArgoCD to pick up | push + k8s-validate + integration-test |
+
+Notice: `k8s-validate` depends only on `code-quality`, not on `build`. Kubernetes manifest validation does not need a container image — it only needs the YAML files. This is intentional: if the manifests are broken, you want to know before you waste time building and scanning an image that ArgoCD will fail to apply anyway.
+
+**Further reading:**
+- [GitHub Actions workflow syntax](https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions)
+- [Trivy documentation](https://aquasecurity.github.io/trivy/)
+- [kubeconform](https://github.com/yannh/kubeconform)
+
+---
+
+## Prerequisites
+
+You should have your fork of `container-devsecops-template` cloned locally (from Lab 1):
 
 ```bash
 cd container-devsecops-template
 ```
 
+Read the pipeline file before touching any tools:
+
+```bash
+cat .github/workflows/ci.yaml
+```
+
+Notice: reading the pipeline file first is not optional. Every tool you are about to run locally is called in this file. Understanding the pipeline structure makes the tool outputs meaningful instead of just being noise.
+
+Operator mindset: understand the automation before trusting it. If you cannot read the pipeline, you cannot debug it.
+
 ---
 
 ## Part 1: Read the Pipeline
 
-Open `.github/workflows/ci.yaml` in your editor. This is the full pipeline. Read through it and identify the 8 jobs:
+Open `.github/workflows/ci.yaml` in your editor. Identify:
 
-| Stage | Job Name | What It Does | Depends On |
-|-------|----------|-------------|------------|
-| 1 | `code-quality` | Lint (ruff) + SAST (bandit) | Nothing — runs first |
-| 2 | `dockerfile-scan` | Hadolint + Trivy config scan | code-quality |
-| 3 | `build` | Multi-stage Docker build | dockerfile-scan |
-| 4 | `container-scan` | Trivy image vulnerability scan | build |
-| 5 | `push` | Push to GHCR (main only) | build + container-scan |
-| 6 | `k8s-validate` | kubeconform on Kustomize output | code-quality |
-| 7 | `integration-test` | Start container, hit endpoints | build |
-| 8 | `update-tag` | Commit new image SHA to Git (main only) | push + k8s-validate + integration-test |
+- Which job runs first with no dependencies
+- Which jobs run in parallel after `code-quality`
+- Which jobs only run on the `main` branch (look for `if:` conditions)
+- How jobs declare their dependencies (look for `needs:`)
 
-Notice the structure:
-- **Cheap checks run first.** Code quality takes seconds and needs no build. If ruff finds a lint error, you never waste minutes building a container.
-- **The build is the gate.** Everything after stage 3 needs the built image.
-- **Two parallel tracks** after code-quality: one track builds/scans the container (stages 2→3→4→5), the other validates K8s manifests (stage 6). They converge at stage 8.
-- **Main-only stages** (push, update-tag) only run on merge to main — PRs get all the checks but don't publish.
-
-**Question to think about:** Why does `k8s-validate` depend on `code-quality` but not on `build`?
+Answer before moving on: why does `k8s-validate` depend on `code-quality` but not on `build`?
 
 ---
 
 ## Part 2: Code Quality — ruff + bandit
 
-### Install the tools
+### Install
 
 ```bash
 pip install ruff bandit
 ```
 
-### Run ruff (linter)
+### Run ruff
 
 ```bash
 ruff check app/
 ```
 
-This should pass cleanly. Ruff checks for Python style issues, unused imports, and common mistakes — fast, because it's written in Rust.
+Ruff is a Python linter written in Rust. It checks for syntax errors, unused imports, style violations, and common logic mistakes. It should pass cleanly on the template.
 
-### Run bandit (security scanner)
+### Run bandit
 
 ```bash
 bandit -r app/
 ```
 
-Bandit is a Static Application Security Testing (SAST) tool. It scans Python code for common security issues: hardcoded passwords, use of `eval()`, insecure SSL settings, subprocess calls with shell=True, etc.
+Bandit is a Static Application Security Testing (SAST) tool. It does not check for style — it checks for dangerous patterns in your code: hardcoded credentials, use of `eval()`, insecure SSL settings, subprocess calls with `shell=True`. It scans the source code without running it.
 
-Read the output. Note the severity levels (LOW, MEDIUM, HIGH) and confidence levels.
+Read the output. Note the severity levels (LOW, MEDIUM, HIGH) and confidence levels. The distinction matters: a HIGH severity finding with LOW confidence is less urgent than a MEDIUM finding with HIGH confidence.
 
 ### Break it on purpose
 
-Open `app/app.py` and add this line somewhere inside a function (e.g., at the top of the `health()` function):
+Add this line inside any function in `app/app.py`, for example at the top of the `health()` function:
 
 ```python
 result = eval("1 + 1")  # nosec: intentional for lab
@@ -93,28 +150,27 @@ Run bandit again:
 bandit -r app/
 ```
 
-You should see a new finding — bandit flags `eval()` as a security issue (B307). This is exactly what SAST catches: dangerous function calls that a linter wouldn't flag.
+Notice: bandit flags `eval()` as B307 — the use of Python's `eval` for untrusted input is a well-known code injection vector. Ruff would not catch this because it is syntactically valid Python. SAST and linting solve different problems.
 
-**Undo the change** before continuing:
+Undo the change:
 
 ```bash
 git checkout app/app.py
 ```
 
-### How the pipeline uses these
+### How CI uses these
 
-Look at the `code-quality` job in `ci.yaml`:
-- Ruff runs with `--output-format=github` so errors show as annotations on the PR
-- Bandit outputs JSON, then a script checks for HIGH-severity issues. Medium issues log a warning but don't fail the build — the threshold is intentional.
+Look at the `code-quality` job in `ci.yaml`. Ruff runs with `--output-format=github` so failures appear as inline PR annotations. Bandit outputs JSON and a script filters for HIGH severity findings — medium findings log a warning but do not fail the build. That threshold is a deliberate policy decision, not a default.
+
+Operator mindset: CI gates encode policy. Know what threshold each tool is configured to enforce and why.
 
 ---
 
-## Part 3: Dockerfile Security — hadolint + trivy
+## Part 3: Dockerfile Security — hadolint + trivy config
 
 ### Install hadolint
 
 ```bash
-# Linux (amd64)
 curl -sL https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64 -o hadolint
 chmod +x hadolint
 sudo mv hadolint /usr/local/bin/
@@ -126,57 +182,53 @@ sudo mv hadolint /usr/local/bin/
 hadolint app/Dockerfile
 ```
 
-Hadolint is a Dockerfile linter that enforces best practices. It checks things like: pinned base image versions, avoiding `apt-get` without cleanup, running as root, missing `HEALTHCHECK`, and shell best practices.
-
-If it passes cleanly, good — the template follows best practices.
+Hadolint lints Dockerfiles against a set of best practice rules. It checks things like: pinned base image versions, `apt-get` without cleanup, missing `HEALTHCHECK`, running as root, and shell best practices. The template follows these rules, so it should pass cleanly.
 
 ### Install trivy
 
 ```bash
-# Linux (amd64)
 curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
 ```
 
-### Run trivy config scan
+### Run trivy config
 
 ```bash
 trivy config app/
 ```
 
-Trivy's config mode scans Dockerfiles (and other IaC files) for security misconfigurations — running as root, exposed secrets, missing security directives.
+Trivy's config mode scans Dockerfiles and other infrastructure-as-code files for security misconfigurations. It catches things hadolint does not — running as root, exposed secrets baked into layers, missing security directives.
 
 ### Break it on purpose
 
-Open `app/Dockerfile` and change the `USER` line. Find:
+In `app/Dockerfile`, find the `USER` line and change it:
 
 ```dockerfile
+# Change this:
 USER appuser
-```
-
-Change it to:
-
-```dockerfile
+# To this:
 USER root
 ```
 
-Run both tools again:
+Run both tools:
 
 ```bash
 hadolint app/Dockerfile
 trivy config app/
 ```
 
-Both should flag running as root. Hadolint will warn about DL3002 (last user should not be root). Trivy will flag it as a misconfiguration.
+Notice: both tools flag running as root, but they report it differently. Hadolint calls it DL3002. Trivy calls it a misconfiguration with a CVE-style reference. In CI, either failure blocks the pipeline before the image is ever built — catching the problem when it is cheap to fix (edit a line) rather than after it reaches production (root process escaping a container).
 
-**Undo the change:**
+Undo the change:
 
 ```bash
 git checkout app/Dockerfile
 ```
 
+Operator mindset: Dockerfile security checks run before the build because fixing a Dockerfile is free. Fixing a production incident caused by a root container is not.
+
 ---
 
-## Part 4: Container Build + Scan
+## Part 4: Container Build + Image Scan
 
 ### Build the image
 
@@ -184,7 +236,7 @@ git checkout app/Dockerfile
 docker build -t portfolio-test app/
 ```
 
-This runs the same multi-stage build that CI runs. Stage 1 installs dependencies, stage 2 copies them into a clean runtime image.
+This runs the same multi-stage build that CI runs. Stage 1 installs dependencies in a full build environment. Stage 2 copies only the built artifacts into a clean, minimal runtime image. The final image does not contain build tools — only what the app needs to run.
 
 ### Scan the built image
 
@@ -192,21 +244,23 @@ This runs the same multi-stage build that CI runs. Stage 1 installs dependencies
 trivy image portfolio-test
 ```
 
-This is different from `trivy config` — it scans the actual container image for known CVEs in installed packages. The output shows vulnerabilities by severity: CRITICAL, HIGH, MEDIUM, LOW.
+This is different from `trivy config` — instead of reading the Dockerfile, it inspects the actual image layers for known CVEs in every installed package. The output shows vulnerabilities by severity: CRITICAL, HIGH, MEDIUM, LOW.
 
-In CI, the pipeline fails if any CRITICAL or HIGH vulnerabilities are found:
+Run the CI gate version — the one that actually fails the pipeline:
 
 ```bash
 trivy image --severity CRITICAL,HIGH --exit-code 1 portfolio-test
 ```
 
-The `--exit-code 1` flag makes trivy return a non-zero exit code (failure) if it finds matches. This is how CI gates work — the tool's exit code determines pass/fail.
+Notice: `--exit-code 1` makes trivy return a non-zero exit code when it finds matches at the specified severity. CI systems treat non-zero exit codes as failures. This is how every automated gate works — the tool reports what it found, and the exit code determines pass or fail. If trivy exits 0, the pipeline continues. If it exits 1, it stops.
 
-**Think about it:** Why does the pipeline scan the Dockerfile (stage 2) _and_ the built image (stage 4)? Because they catch different things. Hadolint/trivy-config catch bad practices in how you _write_ the Dockerfile. Trivy-image catches vulnerabilities in the packages _inside_ the resulting image. A perfectly-written Dockerfile can still produce an image with CVEs if the base image has them.
+Notice: you ran trivy twice on the same code — once on the Dockerfile (`trivy config`) and once on the built image (`trivy image`). These catch different things. `trivy config` catches bad practices in how you write the Dockerfile. `trivy image` catches CVEs in the packages that ended up inside the resulting image. A perfectly written Dockerfile using a base image with unpatched vulnerabilities will pass `trivy config` and fail `trivy image`.
+
+Operator mindset: scanning the Dockerfile and scanning the image are not redundant — they are complementary checks that catch failures at different layers.
 
 ---
 
-## Part 5: Kubernetes Validation — kubeconform
+## Part 5: Kubernetes Manifest Validation — kubeconform
 
 ### Install kubeconform
 
@@ -221,77 +275,81 @@ sudo mv kubeconform /usr/local/bin/
 kubectl kustomize k8s/overlays/local | kubeconform -strict -ignore-missing-schemas -summary
 ```
 
-This does two things:
-1. `kubectl kustomize` renders the Kustomize overlay into plain YAML (same thing ArgoCD's repo server does)
-2. `kubeconform` validates that YAML against the Kubernetes API schema — correct `apiVersion`, required fields present, correct types
+This does two things in sequence. First, `kubectl kustomize` renders the Kustomize overlay into plain YAML — the exact same thing ArgoCD's repo server does when it reads your Git repo. Second, `kubeconform` validates that YAML against the official Kubernetes API schema: correct `apiVersion` values, all required fields present, correct field types.
 
-The `-strict` flag rejects unknown fields (catches typos like `replicas` spelled as `replica`). The `-ignore-missing-schemas` flag skips CRDs that don't have built-in schemas.
+The `-strict` flag rejects unknown fields, catching typos like `replica` instead of `replicas`. The `-ignore-missing-schemas` flag skips CRDs without built-in schemas rather than erroring on them.
 
 ### Break it on purpose
 
 Edit `k8s/base/deployment.yaml`. Change the `apiVersion`:
 
 ```yaml
-# Change this:
+# Change:
 apiVersion: apps/v1
-# To this:
+# To:
 apiVersion: apps/v999
 ```
 
-Run the validation again:
+Run validation again:
 
 ```bash
 kubectl kustomize k8s/overlays/local | kubeconform -strict -ignore-missing-schemas -summary
 ```
 
-Kubeconform should reject it — `apps/v999` isn't a real API version. This is exactly the kind of error that CI catches before merge, preventing ArgoCD from trying to apply broken manifests.
+Notice: kubeconform rejects `apps/v999` because it is not a real Kubernetes API version. ArgoCD would have caught this too — but only when it tried to sync and the API server rejected the manifest. Catching it in CI means the bad manifest never reaches the cluster, never blocks a sync, and never shows up in the ArgoCD UI as a `SyncFailed` error.
 
-**Undo the change:**
+Undo the change:
 
 ```bash
 git checkout k8s/base/deployment.yaml
 ```
 
+Operator mindset: manifest validation in CI is a fast pre-flight check for what ArgoCD would eventually reject anyway. Catch it early when the fix is a one-line edit, not during an incident.
+
 ---
 
-## Part 6: See It Run in GitHub
+## Part 6: Watch It Run in GitHub
 
-Now that you've run each tool by hand, push a commit to your fork and watch CI automate the same checks.
+Now that you have run every tool by hand, push a commit and watch CI automate the same sequence.
 
-1. Make a small, valid change. Edit `k8s/base/configmap.yaml` — change the `BIO` field to something about you:
+Make a small, valid change to trigger a pipeline run:
 
 ```bash
-# Edit the file, then:
+# Edit k8s/base/configmap.yaml — change the BIO field
 git add k8s/base/configmap.yaml
 git commit -m "personalize bio"
 git push
 ```
 
-2. Open your fork on GitHub → **Actions** tab
-3. Watch the pipeline run. You should see the stages execute in the order you studied:
-   - Code Quality passes (ruff + bandit find nothing wrong)
-   - Dockerfile Scan passes (hadolint + trivy find nothing wrong)
-   - Build succeeds
-   - Container Scan passes
-   - K8s Validation passes (kubeconform approves the manifests)
-   - Integration Test passes (container starts, endpoints respond)
+Go to your fork on GitHub → **Actions** tab. Watch the pipeline run. You should see:
 
-Each green checkmark is a tool you just ran by hand. CI runs them all, every time, automatically.
+- `code-quality` passes (ruff + bandit find nothing wrong)
+- `dockerfile-scan` passes (hadolint + trivy-config find nothing wrong)
+- `build` succeeds
+- `container-scan` passes
+- `k8s-validate` passes (kubeconform approves the manifests)
+- `integration-test` passes (container starts, endpoints respond)
+
+Notice: the green checkmarks map exactly to the tools you just ran locally. CI is not a black box — it is the same tools, the same commands, automated and run on every commit. When CI fails, you can reproduce the failure locally with the exact command from the workflow file.
+
+Operator mindset: if you cannot reproduce a CI failure locally, you do not understand it well enough to fix it reliably.
 
 ---
 
-## Checkpoint
+## Verification Checklist
 
 You are done when you can:
-- [ ] Name all 8 pipeline stages in order
-- [ ] Explain why cheap checks run before expensive ones
-- [ ] Have run 5 tools locally: ruff, bandit, hadolint, trivy, kubeconform
-- [ ] Have seen red output from at least 3 tools (eval→bandit, USER root→hadolint/trivy, bad apiVersion→kubeconform)
-- [ ] Have pushed a commit and watched CI run on your fork
-- [ ] Can explain the difference between `trivy config` (Dockerfile scan) and `trivy image` (CVE scan)
+
+- Name all 8 pipeline stages in order and explain what each one catches
+- Explain why cheap checks run before expensive ones, and why two tracks run in parallel
+- Have run all five tools locally: ruff, bandit, hadolint, trivy, kubeconform
+- Have triggered at least three tool failures intentionally: `eval` → bandit, `USER root` → hadolint/trivy, bad `apiVersion` → kubeconform
+- Have pushed a commit and watched CI run all stages green on your fork
+- Explain the difference between `trivy config` (Dockerfile static scan) and `trivy image` (CVE scan of built image)
 
 ---
 
-## Take It Further
+## Reinforcement Scenarios
 
-**`act` — run GitHub Actions locally.** The [act](https://github.com/nektos/act) tool lets you run your full GitHub Actions workflow locally via Docker. It's useful for debugging CI without pushing commits, but it adds install complexity and can hit docker-in-docker issues in Codespaces. Worth knowing about, not required for this lab.
+- `jerry-pipeline-secret-leak`
+- `jerry-trivy-false-positive`

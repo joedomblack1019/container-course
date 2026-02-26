@@ -10,6 +10,12 @@
 
 ---
 
+## The Story
+
+A single control-plane node outage should not become a full platform outage. This lab builds operational intuition for HA behavior so you can reason quickly about quorum, failure tolerance, and recovery order before touching production clusters.
+
+---
+
 ## CKA Objectives Mapped
 
 - Configure high-availability control plane concepts
@@ -174,7 +180,7 @@ Suggested runbook order:
 
 ---
 
-## Validation Checklist
+## Verification Checklist
 
 You are done when:
 
@@ -182,6 +188,13 @@ You are done when:
 - etcd member list inspected and quorum explained
 - One control-plane node failure simulated and recovered
 - You produced a short HA incident runbook
+
+---
+
+## Reinforcement Scenarios
+
+- `37-jerry-scheduler-missing`
+- `jerry-node-notready-kubelet`
 
 ---
 

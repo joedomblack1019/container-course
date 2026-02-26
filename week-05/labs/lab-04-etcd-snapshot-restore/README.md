@@ -10,6 +10,12 @@
 
 ---
 
+## The Story
+
+An API server outage is stressful, but the real risk is not understanding whether cluster state is recoverable. This lab builds recovery confidence: capture a valid etcd snapshot, rehearse restore mechanics safely, and document evidence like you would during an incident.
+
+---
+
 ## CKA Objectives Mapped
 
 - Back up and restore cluster state
@@ -278,7 +284,7 @@ Document this sequence in your notes:
 
 ---
 
-## Validation Checklist
+## Verification Checklist
 
 You are done when:
 
@@ -300,6 +306,6 @@ rm -rf ./artifacts
 
 ---
 
-## Reinforcement Scenario
+## Reinforcement Scenarios
 
 - `jerry-etcd-snapshot-missing`

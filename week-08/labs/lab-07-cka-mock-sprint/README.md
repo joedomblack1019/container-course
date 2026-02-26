@@ -5,6 +5,18 @@
 
 ---
 
+## The Story
+
+This is your dress rehearsal: a compressed incident window where context switching, verification discipline, and calm execution matter more than memorizing one command. The goal is to simulate exam pressure while preserving production-style troubleshooting habits.
+
+---
+
+## Background: Sprint Strategy Under Exam Constraints
+
+CKA-style performance depends on triage and time management as much as technical depth. Fast passes secure high-confidence points first, then remaining time is used for heavier troubleshooting and control-plane tasks. Evidence capture for each task prevents false positives and mirrors incident-review expectations.
+
+---
+
 ## Status
 
 This lab is a **draft skeleton** for instructor build-out. It defines structure, scoring, and task blueprint. Fault-injection scripts and full answer key are intentionally not included in this learner-facing file.
@@ -95,6 +107,17 @@ Passing target:
 
 ---
 
+## Verification Checklist
+
+You are done when:
+
+- Completed scorecard includes command evidence for each attempted task
+- Final verification output is recorded for each completed task
+- Total score is calculated and compared against pass thresholds
+- Remaining blockers are documented with next command to run
+
+---
+
 ## Suggested Verification Commands Bank
 
 ```bash
@@ -121,15 +144,15 @@ To finalize this lab:
 
 ---
 
-## Remediation Mapping (Draft)
+## Reinforcement Scenarios
 
-- RBAC issues -> `jerry-rbac-denied`
-- Context mistakes -> `jerry-kubeconfig-context-confusion`
-- DNS failures -> `jerry-coredns-loop`
-- Scheduling/control-plane -> `jerry-scheduler-missing`
-- Node recovery -> `jerry-node-notready-kubelet`
-- Storage binding -> `jerry-pvc-pending-storageclass`
-- etcd backup -> `jerry-etcd-snapshot-missing`
+- `jerry-rbac-denied`
+- `jerry-kubeconfig-context-confusion`
+- `jerry-coredns-loop`
+- `37-jerry-scheduler-missing`
+- `jerry-node-notready-kubelet`
+- `jerry-pvc-pending-storageclass`
+- `jerry-etcd-snapshot-missing`
 
 ---
 

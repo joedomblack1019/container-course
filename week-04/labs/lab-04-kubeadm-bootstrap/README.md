@@ -10,6 +10,12 @@
 
 ---
 
+## The Story
+
+When cluster bootstrap fails, application-level debugging is irrelevant until control-plane fundamentals are restored. This lab builds the operational muscle to initialize, validate, and reset a kubeadm cluster safely so you can recover from low-level failures under exam and production pressure.
+
+---
+
 ## CKA Objectives Mapped
 
 - Prepare infrastructure for cluster install
@@ -261,7 +267,7 @@ Then repeat Part 2 and verify you can bootstrap again without notes.
 
 ---
 
-## Validation Checklist
+## Verification Checklist
 
 You are done when all are true:
 
@@ -273,7 +279,7 @@ You are done when all are true:
 
 ---
 
-## Mapping to Reinforcement Scenarios
+## Reinforcement Scenarios
 
 - `jerry-rbac-denied` (authorization checks in the next lab)
 - `jerry-node-notready-kubelet` (node recovery under pressure)

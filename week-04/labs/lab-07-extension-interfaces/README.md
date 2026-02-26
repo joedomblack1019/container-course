@@ -10,6 +10,12 @@
 
 ---
 
+## The Story
+
+When pods fail, the fastest path to root cause is knowing which subsystem owns the failure: runtime, network, or storage. This lab sharpens that boundary awareness by mapping CRI, CNI, and CSI to concrete files, sockets, and failure signatures.
+
+---
+
 ## CKA Objectives Mapped
 
 - Understand extension interfaces (CNI, CSI, CRI, etc.)
@@ -274,7 +280,7 @@ Fill out this table based on your observations:
 
 ---
 
-## Validation Checklist
+## Verification Checklist
 
 You are done when:
 
@@ -293,6 +299,6 @@ kubectl delete namespace csi-test
 
 ---
 
-## Reinforcement Scenario
+## Reinforcement Scenarios
 
 - `jerry-wrong-cni-config`

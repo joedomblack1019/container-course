@@ -263,10 +263,16 @@ Pod: uptime-kuma-xxxxx:3001
 
 ---
 
-## Checkpoint
+## Verification Checklist
 
 You are done when:
 - Uptime Kuma is running in your dev namespace with a PVC bound
 - Your HTTPRoute is attached to `cilium-gateway`
 - `https://<you>.status.lab.shart.cloud` loads
 - You have three monitors and a public status page
+
+---
+
+## Reinforcement Scenarios
+
+- `jerry-gateway-route-detached`

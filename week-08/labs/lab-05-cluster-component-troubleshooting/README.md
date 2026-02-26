@@ -10,6 +10,12 @@
 
 ---
 
+## The Story
+
+You are the on-call engineer during a high-pressure incident block. Multiple failures appear back-to-back, and random command guessing makes things worse. This lab trains repeatable triage: classify scope, select the right runbook, collect evidence, and close incidents with confidence.
+
+---
+
 ## CKA Objectives Mapped
 
 - **Troubleshoot cluster and nodes** (30% weight) - Node health, kubelet recovery, resource pressure
@@ -220,6 +226,17 @@ Record your findings for each incident in [`starter/sprint-scorecard.md`](./star
 
 ---
 
+## Verification Checklist
+
+You are done when:
+
+- At least 4 of 5 incidents are resolved within time limits
+- Each incident references the correct troubleshooting runbook
+- Evidence commands and symptom-level verification are documented
+- Root cause is stated for every completed incident
+
+---
+
 ## Cleanup
 
 ```bash
@@ -248,7 +265,7 @@ fi
 
 ---
 
-## Reinforcement Practice
+## Reinforcement Scenarios
 
 After completing this lab, practice these individual scenarios to reinforce specific skills:
 

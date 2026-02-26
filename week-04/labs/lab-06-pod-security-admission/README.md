@@ -10,6 +10,12 @@
 
 ---
 
+## The Story
+
+Security policy only helps if it prevents risky workloads before they run. This lab puts you in the operator seat to enforce Pod Security Standards at namespace boundaries, read admission failures precisely, and remediate manifests without weakening policy.
+
+---
+
 ## CKA Objectives Mapped
 
 - Configure Pod admission and scheduling (limits, node affinity, etc.)
@@ -368,7 +374,7 @@ EOF
 
 ---
 
-## Validation Checklist
+## Verification Checklist
 
 You are done when:
 
@@ -387,6 +393,6 @@ kubectl delete namespace psa-demo psa-enforce psa-audit psa-warn psa-production
 
 ---
 
-## Reinforcement Scenario
+## Reinforcement Scenarios
 
 - `jerry-psa-violation`

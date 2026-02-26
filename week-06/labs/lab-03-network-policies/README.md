@@ -379,10 +379,16 @@ assets/generated/week-06-network-policies/
 
 ---
 
-## Checkpoint
+## Verification Checklist
 
 You are done when:
 - Public URLs work (Gateway → Services)
 - `/visits` works (app ↔ redis)
 - Uptime Kuma can monitor dev and prod
 - Your namespace is no longer default-allow
+
+---
+
+## Reinforcement Scenarios
+
+- `jerry-networkpolicy-dns`

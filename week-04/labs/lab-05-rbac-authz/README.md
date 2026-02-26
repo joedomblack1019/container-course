@@ -10,6 +10,12 @@
 
 ---
 
+## The Story
+
+Most outages from access control are not "RBAC is broken"; they are scope mistakes, wrong subjects, or missing bindings discovered during an incident. This lab trains a repeatable deny-triage workflow so you can prove authorization outcomes quickly instead of guessing.
+
+---
+
 ## CKA Objectives Mapped
 
 - Manage role-based access controls (RBAC)
@@ -225,7 +231,7 @@ kubectl describe clusterrole node-reader
 
 ---
 
-## Validation Checklist
+## Verification Checklist
 
 You are done when:
 
@@ -245,6 +251,6 @@ kubectl delete clusterrolebinding auditor-node-reader
 
 ---
 
-## Reinforcement Scenario
+## Reinforcement Scenarios
 
 - `jerry-rbac-denied`

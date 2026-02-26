@@ -10,6 +10,18 @@
 
 ---
 
+## The Story
+
+Your app now depends on Redis, so shipping only a Deployment and Service is no longer enough. This lab mirrors real platform work: evolve your GitOps directory, deploy app plus backing services together, and verify reconciliation in shared cluster namespaces.
+
+---
+
+## Background: Evolving GitOps from App-Only to Full Stack
+
+GitOps maturity means infrastructure grows with application complexity. As dependencies are introduced, the repository becomes the contract for the complete runtime stack: config, secrets, stateful storage, and workload manifests. ArgoCD then continuously enforces that declared state in cluster.
+
+---
+
 ## What's Changed Since Week 4
 
 In Week 4, you created your student directory in `talos-gitops` from scratch — a namespace, deployment, service, and kustomization for dev (in-class) and prod (homework). ArgoCD deployed your self-contained v4 app.
@@ -644,7 +656,7 @@ The plaintext secret in your repo is a known problem. We'll fix it. But today yo
 
 ---
 
-## Checkpoint ✅
+## Verification Checklist
 
 Before you're done, verify:
 
@@ -657,3 +669,10 @@ Before you're done, verify:
 - [ ] After merge: `/visits` endpoint returns an incrementing counter
 - [ ] After merge: `/info` shows `redis_connected: true` and `app_version: v5`
 - [ ] You can explain why the deployment references a ConfigMap and Secret instead of hardcoding values
+
+---
+
+## Reinforcement Scenarios
+
+- `jerry-wrong-namespace`
+- `jerry-missing-configmap`

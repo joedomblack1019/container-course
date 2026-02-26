@@ -18,6 +18,12 @@ VPA watches your pods over time and tells you — or automatically applies — b
 
 ---
 
+## Background: Vertical Rightsizing and Disruption Tradeoffs
+
+VPA continuously compares observed container usage against declared requests and limits, then produces bounded recommendations. Unlike HPA, VPA tuning often requires pod recreation to apply changes, so disruption policy and rollout timing matter. In practice, teams start in recommendation mode and promote changes deliberately.
+
+---
+
 ## VPA vs HPA — Quick Model
 
 | | HPA | VPA |
@@ -256,6 +262,17 @@ resourcePolicy:
 
 ---
 
+## Verification Checklist
+
+You are done when:
+
+- VPA components are running in `kube-system`
+- `jerry-vpa` shows a non-empty recommendation for the target deployment
+- You can explain `Off`, `Initial`, and `Auto` update modes
+- You applied a recommendation intentionally and verified rollout success
+
+---
+
 ## Cleanup
 
 ```bash
@@ -274,3 +291,10 @@ rm -rf autoscaler
 - VPA applies changes by evicting and recreating pods — understand the disruption model
 - HPA and VPA can coexist safely if you divide responsibility: HPA for CPU replicas, VPA for memory sizing
 - CKA exam expects you to know the difference between HPA and VPA and read VPA recommendation output
+
+---
+
+## Reinforcement Scenarios
+
+- `27-jerry-resource-hog-hunt`
+- `jerry-hpa-not-scaling`

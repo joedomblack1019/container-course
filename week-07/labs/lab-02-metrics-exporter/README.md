@@ -23,6 +23,12 @@ In this lab, you'll build an exporter that:
 
 ---
 
+## Background: Exporter Pattern and Metrics Contracts
+
+Prometheus ecosystems favor pull-based metrics where each workload exposes a stable `/metrics` endpoint. The exporter pattern keeps instrumentation concerns separate from application request paths, reducing blast radius and enabling independent deployment/versioning of telemetry logic. Good exporters are read-only, predictable, and label-safe.
+
+---
+
 ## Part 0: Built-in Resource Monitoring with kubectl top
 
 Before building custom application metrics, let's explore what Kubernetes gives you out of the box for cluster and pod resource monitoring.
@@ -157,7 +163,7 @@ Then hit `/metrics` again and confirm the count changed.
 
 ---
 
-## Checkpoint
+## Verification Checklist
 
 You are done when:
 - `/metrics` responds
@@ -167,3 +173,9 @@ You are done when:
 A complete solution is in [`solution/`](./solution/) if you get stuck.
 
 > **Bonus:** After completing Lab 1, consider adding your exporter as a Kustomize component (`components/metrics-exporter/`) so any overlay can opt into it — just like you did with Uptime Kuma.
+
+---
+
+## Reinforcement Scenarios
+
+- `jerry-exporter-missing-metrics`

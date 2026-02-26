@@ -10,6 +10,12 @@
 
 ---
 
+## The Story
+
+Routine node maintenance causes outages when teams skip sequencing and treat drain errors like annoyances. This lab trains disciplined operations: respect disruption budgets, keep scheduling intent explicit, and plan upgrades around version-skew rules before touching production nodes.
+
+---
+
 ## CKA Objectives Mapped
 
 - Manage node scheduling and maintenance operations
@@ -282,7 +288,7 @@ Map this checkpoint to reinforcement scenario: `35-jerry-missing-jsonpath`.
 
 ---
 
-## Validation Checklist
+## Verification Checklist
 
 You are done when:
 

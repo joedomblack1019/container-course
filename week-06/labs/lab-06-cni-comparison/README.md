@@ -112,7 +112,7 @@ kubectl exec client -- curl -s --max-time 5 http://server
 
 Notice: this successful response is your known-good baseline. You need this proof so later denial behavior can be attributed to policy enforcement, not app health.
 
-Operator mindset: establish a clean baseline path before evaluating controls.
+Operator mindset: if the baseline curl fails, stop and fix app path health first; only evaluate policy controls after baseline traffic is proven.
 
 You should see the nginx welcome page HTML — pods are communicating normally.
 
@@ -154,7 +154,7 @@ kubectl describe networkpolicy deny-server-ingress
 # The description is accurate. kindnet just doesn't act on it.
 ```
 
-Operator mindset: separate object validity from runtime enforcement.
+Operator mindset: if the policy object is valid but traffic still flows, treat it as an enforcement-plane gap, not a YAML-authoring problem.
 
 Record this in your notes: **NetworkPolicy on kindnet = audit trail only**. It's a common source of "my NetworkPolicy doesn't work" incidents when a team moves a manifest from a Cilium/Calico cluster to a kindnet dev cluster, or uses Flannel without a NetworkPolicy-capable add-on.
 
@@ -225,7 +225,7 @@ Delete the probe pod — you'll bring up the real workloads after installing Cal
 kubectl delete pod probe --ignore-not-found
 ```
 
-Operator mindset: prove the failure chain from node condition -> pod symptom before installing a fix.
+Failure chain: prove node condition -> pod symptom before installing a fix.
 
 ---
 
@@ -280,7 +280,7 @@ kubectl -n kube-system get pods -l app=calico-kube-controllers
 kubectl get crd | grep calico
 ```
 
-Operator mindset: after installing infrastructure, verify components, control plane status, and config alignment.
+Verification: after installing infrastructure, verify components, control plane status, and config alignment.
 
 The CRDs include `felixconfigurations`, `ippools`, `networkpolicies` (Calico's own extended variant), and more. Calico has its own policy model that extends Kubernetes NetworkPolicy — but for this lab we'll use standard `networking.k8s.io/v1` NetworkPolicy objects.
 
@@ -352,7 +352,7 @@ kubectl delete networkpolicy deny-server-ingress
 kubectl exec client -- curl -s --max-time 5 http://server
 ```
 
-Operator mindset: test both directions (deny and recovery), not just one state.
+Operator mindset: if deny works but recovery does not, the policy is not your only variable; always test both deny and recovery before closing the loop.
 
 Traffic flows again. Calico is reacting to NetworkPolicy creates and deletes in real time.
 
@@ -382,7 +382,7 @@ Calico logs also show policy evaluation:
 kubectl -n kube-system logs "$CALICO_NODE" -c calico-node --tail=50 | grep -i "policy\|felix" | head -20
 ```
 
-Operator mindset: correlate control-plane objects with data-plane evidence.
+Evidence rule: correlate control-plane objects with data-plane evidence.
 
 ---
 
@@ -462,7 +462,7 @@ cilium policy get
 kind delete cluster --name cni-cilium
 ```
 
-Operator mindset: keep comparisons controlled by changing one major variable at a time.
+Experiment rule: keep comparisons controlled by changing one major variable at a time.
 
 ---
 
@@ -480,7 +480,7 @@ kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.0/
 
 Notice: this command is useful under pressure because it restores baseline pod networking and policy capability in one move.
 
-Operator mindset: choose for required capability first, then optimize for observability and scale.
+Decision rule: choose for required capability first, then optimize for observability and scale.
 
 **"NetworkPolicy is applied but not enforced"**
 → The CNI doesn't support enforcement. Switch to Calico or Cilium, or check that the existing CNI's policy enforcement is enabled.
@@ -502,7 +502,7 @@ Operator mindset: choose for required capability first, then optimize for observ
 
 ---
 
-## Validation Checklist
+## Verification Checklist
 
 You are done when:
 
@@ -541,7 +541,7 @@ kubectl config use-context ziyotek-prod  2>/dev/null || true
 
 ---
 
-## Reinforcement Scenario
+## Reinforcement Scenarios
 
 - `33-jerry-wrong-cni-config` — CNI misconfiguration causing pod networking failure; diagnose from node status, pod events, and CNI logs
 

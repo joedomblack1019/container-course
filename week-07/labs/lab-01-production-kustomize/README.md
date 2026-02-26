@@ -27,6 +27,12 @@ This lab fixes it by moving to a real Kustomize pattern:
 
 ---
 
+## Background: Why Base, Overlays, and Components Matter
+
+As environment count and service count grow, copy-pasted manifests create drift and hidden risk. Kustomize solves this by separating shared intent (`base`) from environment-specific differences (`overlays`) and optional capability bundles (`components`). This structure keeps promotion predictable and makes reviews focus on real changes instead of duplicated noise.
+
+---
+
 ## Starting Point
 
 Your starting point is your current `talos-gitops` directory — the `dev/` and `prod/` directories you built in **Week 5** (Lab 3: Ship Redis to Prod) and extended in **Week 6** (Gateway API + NetworkPolicies).
@@ -152,7 +158,7 @@ Once `kubectl kustomize overlays/dev` and `kubectl kustomize overlays/prod` both
 
 ---
 
-## Checkpoint
+## Verification Checklist
 
 You are done when:
 - `base/` contains only shared resources (no env-specific drift)
@@ -161,3 +167,9 @@ You are done when:
 - prod overlay does not include dev-only tooling
 
 A complete solution is in [`solution/`](./solution/) if you get stuck.
+
+---
+
+## Reinforcement Scenarios
+
+- `jerry-kustomize-drift`

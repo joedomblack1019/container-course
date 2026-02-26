@@ -10,6 +10,12 @@
 
 ---
 
+## The Story
+
+When clusters feel slow, teams often guess and restart pods without evidence. This lab builds a faster habit: use `kubectl top` first, identify actual CPU or memory pressure, and separate scheduler reservations from live consumption before taking action.
+
+---
+
 ## CKA Objectives Mapped
 
 - Use `kubectl top` to monitor node and pod resource consumption
@@ -321,6 +327,17 @@ Passing target: **4/4**.
 4. **Memory growth:** A pod starts showing steadily increasing memory in `kubectl top` over 30 minutes without any corresponding increase in traffic. What should you suspect, and what command would you run next?
 
 5. **Missing from top:** A pod is in `Running` state but never appears in `kubectl top pods`. What are two possible explanations?
+
+---
+
+## Verification Checklist
+
+You are done when:
+
+- `metrics-server` is running and `kubectl top nodes` returns data
+- You identified top CPU and memory pods using `--sort-by`
+- You explained one request-vs-actual mismatch using `describe` + `top`
+- You completed the graded challenge with `4/4`
 
 ---
 

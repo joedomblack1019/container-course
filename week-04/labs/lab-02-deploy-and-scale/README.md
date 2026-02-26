@@ -5,6 +5,18 @@
 
 ---
 
+## The Story
+
+Your app now runs in containers, but production failures are rarely about "did it start once." They are about rollouts, scaling behavior, and fast diagnosis under pressure. This lab is the first time you run the full loop: deploy, update safely, break intentionally, and recover with evidence.
+
+---
+
+## Background: Deployments, Services, and Reconciliation
+
+Kubernetes controllers continuously reconcile live state to declared state. A Deployment manages replica count and rollout history; a Service provides stable discovery and load balancing over ephemeral pods. Most day-1 incidents map to these primitives: bad image, bad probes, bad selectors, or missing resources.
+
+---
+
 ## Part 1: Update Your App
 
 Your Week 1 app worked great as a container. Now we're adding a feature that only makes sense when running on Kubernetes: a `/info` endpoint that reveals which pod is handling each request.
@@ -572,7 +584,7 @@ assets/generated/week-04-deploy-rollout/
 
 ---
 
-## Checkpoint ✅
+## Verification Checklist
 
 Before moving on, verify you can:
 
@@ -597,3 +609,11 @@ Before moving on, verify you can:
 ## Next Lab
 
 Continue to [Lab 3: GitOps Submission — Ship to Production](../lab-03-gitops-submission/)
+
+---
+
+## Reinforcement Scenarios
+
+- `jerry-forgot-resources`
+- `jerry-broken-service`
+- `jerry-probe-failures`

@@ -18,6 +18,12 @@ Enter Vault. You'll install it in dev mode, create a GitHub App for API access, 
 
 ---
 
+## Background: Runtime Secret Retrieval with Vault
+
+Secrets should be stored and rotated independently from application manifests and images. Vault provides centralized secret storage with access control and auditability, while applications fetch credentials at runtime instead of embedding them in source or ConfigMaps. In this lab, Vault is run in dev mode for speed, but the integration model mirrors production patterns.
+
+---
+
 ## Starting Point
 
 You should have:
@@ -206,7 +212,7 @@ Check the `integrations` section:
 
 ---
 
-## Checkpoint
+## Verification Checklist
 
 You are done when:
 - [ ] Vault is running in dev mode on your cluster
@@ -215,3 +221,9 @@ You are done when:
 - [ ] The `vault-token` Kubernetes secret exists in the `portfolio` namespace
 - [ ] The portfolio dashboard shows live GitHub data (Actions runs, commits, packages)
 - [ ] `/api/status` shows both vault and github_api as `connected`
+
+---
+
+## Reinforcement Scenarios
+
+- `jerry-argo-out-of-sync`

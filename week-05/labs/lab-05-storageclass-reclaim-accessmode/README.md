@@ -10,6 +10,12 @@
 
 ---
 
+## The Story
+
+Storage incidents are often expensive because mistakes look harmless at first: wrong access mode, wrong reclaim policy, or a PVC that never binds. This lab gives you direct exposure to those failure modes so you can predict behavior before data is lost.
+
+---
+
 ## CKA Objectives Mapped
 
 - Understand StorageClass behavior and dynamic provisioning
@@ -558,7 +564,7 @@ Always verify:
 
 ---
 
-## Validation Checklist
+## Verification Checklist
 
 You are done when:
 

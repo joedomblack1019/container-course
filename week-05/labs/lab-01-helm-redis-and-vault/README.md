@@ -10,7 +10,13 @@
 
 ---
 
-## The Two Approaches - Helm vs. Manifest.yaml
+## The Story
+
+You inherited a cluster where secrets are copied through chat, backing services are hand-wired differently on every team, and nobody agrees when to use Helm versus plain YAML. This lab gives you a practical decision model: use Helm for complex third-party systems, use plain manifests for small services you own, and prove both approaches with Vault and Redis.
+
+---
+
+## Background: The Two Approaches - Helm vs Plain Manifests
 
 Kubernetes manifests can be a real pain in the butt. YAML is finicky, the schemas are complex and ever evolving. Installing and maintaining complex application on Kubernetes is a chore and filled with many pain points. The community surrounding Kubernetes came up with a different approach to manifest creation. That project is called Helm - https://helm.sh. Think of Helm like a package manager for Kubernetes deplyments. Don't want to configure a MySQL service, deployment, pvc, and statefulset from scratch every time? I don't blame you. Helm allows us to install software no matter how complex. It takes a simpler approach to installing, upgrading, and removing applications from within a cluster.
 
@@ -998,7 +1004,7 @@ Keep these files — you'll reuse them in Lab 3 when you push Redis to the share
 
 ---
 
-## Checkpoint
+## Verification Checklist
 
 Before moving on, verify:
 
@@ -1030,6 +1036,13 @@ Before moving on, verify:
 5. You stored `secret/myapp/database` in Vault and `redis-lab-password` in a Kubernetes Secret. What's the difference in security posture between these two approaches? What would an attacker need to access each one?
 
 6. Vault is currently unsealed. What happens if the Vault pod restarts? Try it: `kubectl delete pod vault-0`, wait for it to come back, and run `vault status`. Can you still read your secrets? What do you need to do?
+
+---
+
+## Reinforcement Scenarios
+
+- `jerry-missing-configmap`
+- `jerry-probe-failures`
 
 ---
 

@@ -10,6 +10,18 @@
 
 ---
 
+## The Story
+
+You are the on-call engineer and a teammate says, "the app is down in Kubernetes." If you cannot build a disposable cluster quickly and inspect core system components with confidence, every later debugging step gets slower and riskier. This lab gives you that baseline: create a local cluster fast, verify it, and switch contexts safely between local and shared environments.
+
+---
+
+## Background: kind, Contexts, and Safe Cluster Access
+
+kind runs Kubernetes nodes as Docker containers, which makes it ideal for repeatable lab work where you can break and rebuild without risk to shared environments. `kubectl` contexts are your safety rail when multiple clusters are configured in one kubeconfig. Before any mutating command, confirm the active context so you do not target the wrong cluster.
+
+---
+
 ## Part 1: Create Your Local Cluster
 
 kind (Kubernetes IN Docker) runs Kubernetes nodes as Docker containers. You already have Docker, so this is the fastest way to get a real cluster on your machine.
@@ -333,7 +345,7 @@ It's gone. Permanently. There's no controller watching this pod because we creat
 
 ---
 
-## Checkpoint ✅
+## Verification Checklist
 
 Before moving on, verify:
 
@@ -348,3 +360,10 @@ Before moving on, verify:
 ## Next Lab
 
 Continue to [Lab 2: Deploy, Scale, Update, Debug](../lab-02-deploy-and-scale/)
+
+---
+
+## Reinforcement Scenarios
+
+- `jerry-kubeconfig-context-confusion`
+- `jerry-node-notready-kubelet`

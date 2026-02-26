@@ -25,6 +25,12 @@ Just the core loop: **export → scrape → query**.
 
 ---
 
+## Background: Pull-Based Scraping and Target Health
+
+Prometheus does not wait for apps to push data; it repeatedly scrapes discovered targets on an interval and marks them `UP` or `DOWN`. This model makes discovery, DNS, service wiring, and endpoint health first-class concerns. Most scrape incidents are not "Prometheus is broken" but target reachability or naming mismatches.
+
+---
+
 ## Part 1: Create a Prometheus ConfigMap
 
 Create `prometheus.yml` that scrapes your exporter Service:
@@ -92,7 +98,7 @@ Open:
 
 ---
 
-## Checkpoint
+## Verification Checklist
 
 You are done when:
 - Prometheus targets show your exporter `UP`
@@ -100,3 +106,9 @@ You are done when:
 - you can explain the scrape model (Prometheus pulls metrics on an interval)
 
 > **Bonus:** Query `up` in the PromQL box. You'll see Prometheus also scrapes itself — that's the self-monitoring loop baked into the default config.
+
+---
+
+## Reinforcement Scenarios
+
+- `jerry-prometheus-target-down`

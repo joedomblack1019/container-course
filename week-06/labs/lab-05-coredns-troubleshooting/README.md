@@ -228,7 +228,7 @@ Operator mindset: declare recovery only after symptom-level verification.
 
 ---
 
-## Part 5: Verification Checklist
+## Verification Checklist
 
 This checklist turns troubleshooting into objective criteria. If you cannot point to these outcomes, you are not done yet.
 
@@ -254,6 +254,6 @@ rm -f /tmp/coredns-backup.yaml
 
 ---
 
-## Reinforcement Scenario
+## Reinforcement Scenarios
 
 - `jerry-coredns-loop`
