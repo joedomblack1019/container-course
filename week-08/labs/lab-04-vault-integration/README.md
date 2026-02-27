@@ -103,7 +103,7 @@ The portfolio app authenticates to GitHub's API as a GitHub App, not with a pers
 8. Install the app on your account:
    - From the app settings page, click **Install App** in the left sidebar
    - Click **Install** next to your account
-   - Select **Only select repositories** → choose your `container-devsecops-template` fork
+   - Select **Only select repositories** → choose your `devsecops-portfolio-template` fork
    - Click **Install**
 
 9. Note the **Installation ID** from the URL: `https://github.com/settings/installations/<INSTALLATION_ID>`

@@ -49,7 +49,7 @@ termTitle: "Command Prompt — code quality and SAST"
   prompt="$ "
   height="100%"
   :lines="[
-    { type: 'input', text: 'cd container-devsecops-template' },
+    { type: 'input', text: 'cd devsecops-portfolio-template' },
     { type: 'input', text: 'pip install ruff bandit' },
     { type: 'input', text: 'ruff check app/' },
     { type: 'input', text: 'bandit -r app/' },

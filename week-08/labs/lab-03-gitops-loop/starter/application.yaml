@@ -12,7 +12,7 @@ spec:
   project: default
   source:
     # TODO: Replace with your fork's URL
-    repoURL: https://github.com/<YOUR_GITHUB_USERNAME>/container-devsecops-template.git
+    repoURL: https://github.com/<YOUR_GITHUB_USERNAME>/devsecops-portfolio-template.git
     targetRevision: main
     path: k8s/overlays/local
   destination:

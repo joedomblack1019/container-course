@@ -42,7 +42,7 @@ gh auth status
 pip --version
 ```
 
-You will also need a GitHub account and a fork of the [`devsecops-portfolio-template`](https://github.com/shart-cloud/container-devsecops-template) repository (Lab 1 walks you through this).
+You will also need a GitHub account and a fork of the [`devsecops-portfolio-template`](https://github.com/ziyotek-edu/devsecops-portfolio-template) repository (Lab 1 walks you through this).
 
 ---
 

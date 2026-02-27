@@ -49,8 +49,8 @@ termTitle: "Command Prompt — prerequisites and repo prep"
     { type: 'input', text: 'helm version' },
     { type: 'input', text: 'kubectl cluster-info' },
     { type: 'input', text: 'kind create cluster --name lab' },
-    { type: 'input', text: 'gh repo clone <YOUR_GITHUB_USERNAME>/container-devsecops-template' },
-    { type: 'input', text: 'cd container-devsecops-template' },
+    { type: 'input', text: 'gh repo clone <YOUR_GITHUB_USERNAME>/devsecops-portfolio-template' },
+    { type: 'input', text: 'cd devsecops-portfolio-template' },
     { type: 'success', text: 'Enable workflows in GitHub Actions tab if prompted' },
   ]"
 />
@@ -92,7 +92,7 @@ statusText: "Week 08 · Lab 01 · Reference"
 | `helm version` | Verify Helm installation |
 | `kubectl cluster-info` | Verify cluster connectivity |
 | `kind create cluster --name lab` | Create lab cluster |
-| `gh repo clone <YOUR_GITHUB_USERNAME>/container-devsecops-template` | Clone portfolio fork |
+| `gh repo clone <YOUR_GITHUB_USERNAME>/devsecops-portfolio-template` | Clone portfolio fork |
 | `helm repo add argo https://argoproj.github.io/argo-helm` | Add Argo Helm repo |
 | `helm repo update` | Refresh chart index |
 | `helm install argocd argo/argo-cd --namespace argocd --create-namespace -f starter/values.yaml` | Install ArgoCD chart |

@@ -103,13 +103,13 @@ kubectl config use-context kind-lab
 
 You will need this in Lab 3. Fork it now so CI starts running on your repo while you work through Labs 1 and 2.
 
-1. Go to [`container-devsecops-template`](https://github.com/shart-cloud/container-devsecops-template) on GitHub
+1. Go to [`devsecops-portfolio-template`](https://github.com/ziyotek-edu/devsecops-portfolio-template) on GitHub
 2. Click **Fork** and keep the default name
 3. Clone your fork:
 
 ```bash
-gh repo clone <YOUR_GITHUB_USERNAME>/container-devsecops-template
-cd container-devsecops-template
+gh repo clone <YOUR_GITHUB_USERNAME>/devsecops-portfolio-template
+cd devsecops-portfolio-template
 ```
 
 4. Go to your fork's **Actions** tab and enable workflows if prompted

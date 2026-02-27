@@ -42,7 +42,7 @@ termTitle: "Command Prompt — baseline and portfolio personalization"
   :lines="[
     { type: 'input', text: 'kubectl get pods -n argocd' },
     { type: 'input', text: 'kubectl port-forward service/argocd-server -n argocd 8080:443 &' },
-    { type: 'input', text: 'cd container-devsecops-template' },
+    { type: 'input', text: 'cd devsecops-portfolio-template' },
     { type: 'input', text: 'git add k8s/base/configmap.yaml' },
     { type: 'input', text: 'git commit -m &quot;personalize portfolio config&quot;' },
     { type: 'input', text: 'git push' },
